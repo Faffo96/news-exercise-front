@@ -6,22 +6,26 @@ import { showToast } from "@/app/lib/showToast";
 import { News } from "@/app/model/News.interface";
 import { useEffect, useState } from "react";
 import OverlaySpinner from "../overlaySpinner/overlaySpinner";
+import NewsModal from "../modal/newsModal";
 
 const HomeBody = () => {
     const [newsList, setNewsList] = useState<News[]>([]);
+    const [filteredNews, setFilteredNews] = useState<News[]>([]); // Lista filtrata
     const [loading, setLoading] = useState<boolean>(false);
+    const [filterOption, setFilterOption] = useState<string>("all"); // Stato per il filtro
     const [newNews, setNewNews] = useState<News>({ title: '', body: '', author: '', archiveDate: '', releaseDate: '' });
-    const [onlyActive, setOnlyActive] = useState<boolean>(false);
-    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [editingNews, setEditingNews] = useState<News | null>(null);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
 
     const fetchNews = async () => {
         setLoading(true);
         try {
-            const url = onlyActive ? '/api/news/active' : '/api/news';
+            const url = '/api/news';
             const response = await myHttpService.get(url);
             setNewsList(response.data);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            setFilteredNews(response.data); // Inizializzare la lista filtrata
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             showToast("error", 'Error fetching news:' + error?.response?.data?.message);
             console.error('Error fetching news:', error);
@@ -32,225 +36,143 @@ const HomeBody = () => {
 
     useEffect(() => {
         fetchNews();
-    }, [onlyActive]);
+    }, []);
 
-    const handleCreateNews = async (event: React.FormEvent) => {
-        event.preventDefault();
-        setLoading(true);
-        if (newNews) {
-            try {
-                const response = await myHttpService.post('/api/news', newNews);
-                setNewsList([...newsList, response.data]);
-                showToast("success", "News created successfully.");
-                setNewNews({ title: '', body: '', author: '', archiveDate: '', releaseDate: "" });
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            } catch (error: any) {
-                showToast("error", 'Error creating news:' + error?.response?.data?.message);
-                console.error('Error creating news:', error);
-            } finally {
-                setLoading(false);
+    // Filtra l'array in base all'opzione selezionata
+    useEffect(() => {
+        const filterNews = () => {
+            if (filterOption === "all") {
+                setFilteredNews(newsList);
+            } else if (filterOption === "active") {
+                setFilteredNews(newsList.filter(news => new Date(news.releaseDate) < new Date(news.archiveDate)));
+            } else if (filterOption === "archived") {
+                setFilteredNews(newsList.filter(news => new Date(news.releaseDate) > new Date(news.archiveDate)));
             }
-        }
-    };
+        };
+        filterNews();
+    }, [filterOption, newsList]);
 
-    const handleUpdateNews = async (id: string) => {
-        setLoading(true);
-        if (editingNews) {
-            try {
-                const response = await myHttpService.put(`/api/news/${id}`, editingNews);
-                setNewsList(newsList.map(news => (news.id === id ? response.data : news)));
-                showToast("success", "News updated successfully.");
-                closeModal();
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            } catch (error: any) {
-                showToast("error", 'Error updating news:' + error?.response?.data);
-                console.error('Error updating news:', error);
-            } finally {
-                setLoading(false);
-            }
-        }
-    };
-
-    const handleDeleteNews = async (id: string) => {
+    const handleCreateNews = async () => {
         setLoading(true);
         try {
-            await myHttpService.delete(`/api/news/${id}`);
-            setNewsList(newsList.filter(news => news.id !== id));
-            showToast("success", "News deleted successfully.");
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const response = await myHttpService.post('/api/news', newNews);
+            setNewsList([...newsList, response.data]);
+            showToast("success", "News created successfully.");
+            setNewNews({ title: '', body: '', author: '', archiveDate: '', releaseDate: '' });
+            setIsCreateModalOpen(false);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            showToast("error", 'Error deleting news:' + error?.response?.data?.message);
-            console.error('Error deleting news:', error);
+            showToast("error", 'Error creating news:' + error?.response?.data?.message);
+            console.error('Error creating news:', error);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: string, formType: 'new' | 'edit') => {
-        if (formType === 'new') {
-            setNewNews({ ...newNews, [field]: e.target.value });
-        } else {
-            setEditingNews((prevState) => prevState ? { ...prevState, [field]: e.target.value } : null);
+    const handleUpdateNews = async () => {
+        if (!editingNews) return;
+        setLoading(true);
+        try {
+            const response = await myHttpService.put(`/api/news/${editingNews.id}`, editingNews);
+            setNewsList(newsList.map(news => (news.id === editingNews.id ? response.data : news)));
+            showToast("success", "News updated successfully.");
+            setIsEditModalOpen(false);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (error: any) {
+            showToast("error", 'Error updating news:' + error?.response?.data);
+            console.error('Error updating news:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setOnlyActive(e.target.checked);
-    };
-
-    const openModal = (news: News) => {
-        setEditingNews(news);
-        setIsModalOpen(true);
-    };
-
-    const closeModal = () => {
-        setIsModalOpen(false);
-        setEditingNews(null);
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: string, isEditing: boolean) => {
+        if (isEditing && editingNews) {
+            setEditingNews({ ...editingNews, [field]: e.target.value });
+        } else {
+            setNewNews({ ...newNews, [field]: e.target.value });
+        }
     };
 
     return (
         <div className="container">
             <h1 className="mb-5 color6">News Articles</h1>
 
-            {/* Checkbox to toggle active news */}
+            {/* Filtro tramite Select */}
             <div className="mb-4">
-                <label>
-                    <input
-                        className="mb-2 me-2"
-                        type="checkbox"
-                        checked={onlyActive}
-                        onChange={handleCheckboxChange}
-                    />
-                    <span className="fw-bold fs-3 color6">Show only active news</span>
-                </label>
+                <label htmlFor="filter" className="fw-bold fs-3 color6">Filter News:</label>
+                <select
+                    id="filter"
+                    className="form-select"
+                    value={filterOption}
+                    onChange={(e) => setFilterOption(e.target.value)}
+                >
+                    <option value="all">All</option>
+                    <option value="active">Active</option>
+                    <option value="archived">Archived</option>
+                </select>
             </div>
 
-            {/* Render loading state */}
+            {/* Loading Spinner */}
             {loading && <OverlaySpinner />}
 
-            {/* Display list of news */}
-            {!loading && newsList.length > 0 && (
-                <ul className="d-flex row align-items-center row-cols-3 gap-3">
-                    {newsList.map((news) => (
+            {/* News List */}
+            {!loading && filteredNews.length > 0 && (
+                <ul className="row align-items-center row-cols-3 gap-3">
+                    {filteredNews.map((news) => (
                         <li className="card mb-3 bg-color2 border border-2 border-green rounded-2" key={news.id}>
                             <h2 className="color4 mb-4"><span className="fw-bold color6">Title: </span>{news.title}</h2>
                             <p className="color4"><span className="fw-bold color6">Body: </span>{news.body}</p>
-                            <p className="color4"><span className="fw-bold color6">Release date: </span>{news.releaseDate!}</p>
+                            <p className="color4"><span className="fw-bold color6">Release date: </span>{news.releaseDate}</p>
                             <p className="color4"><span className="fw-bold color6">Archive date: </span>{news.archiveDate}</p>
                             <div>
-                                <button className="border-0 rounded-2 mb-2 py-1 w-100 text-light bg-color6" onClick={() => openModal(news)}>Update</button>
-                                <button className="border-0 rounded-2 mb-2 py-1 w-100 px-5 text-light bg-danger" onClick={() => handleDeleteNews(news.id!)}>Delete</button>
+                                <button
+                                    className="border-0 rounded-2 mb-2 py-1 w-100 text-light bg-color6"
+                                    onClick={() => {
+                                        setEditingNews(news);
+                                        setIsEditModalOpen(true);
+                                    }}
+                                >
+                                    Update
+                                </button>
+                                <button
+                                    className="border-0 rounded-2 mb-2 py-1 w-100 px-5 text-light bg-danger"
+                                    onClick={() => console.log('Delete functionality here')}
+                                >
+                                    Delete
+                                </button>
                             </div>
                         </li>
                     ))}
+
+                    <li className="px-0 list-unstyled">
+                        <button className="card-add border-0 d-flex bg-color6 rounded-2 align-items-center justify-content-center" onClick={() => setIsCreateModalOpen(true)}>
+                            <span className="text-light">+</span>
+                        </button>
+                    </li>
                 </ul>
             )}
 
-<div className="d-flex flex-column align-items-center mb-4">
-                <h2 className="mb-5 color6 fw-bold fs-1">Create news</h2>
+            {/* NewsModal for Creating News */}
+            <NewsModal
+                news={newNews}
+                isOpen={isCreateModalOpen}
+                isEditing={false}
+                onClose={() => setIsCreateModalOpen(false)}
+                onConfirm={handleCreateNews}
+                onInputChange={(e, field) => handleInputChange(e, field, false)}
+            />
 
-                {/* Form for creating news */}
-                <form className="w-25" onSubmit={handleCreateNews}>
-                    <div className="d-flex flex-column mb-2">
-                        <label className="fw-bold fs-2 mb-2 color6" htmlFor="title">Title</label>
-                        <input
-                            type="text"
-                            id="title"
-                            placeholder="Enter title"
-                            value={newNews.title}
-                            onChange={(e) => handleInputChange(e, 'title', 'new')}
-                        />
-                    </div>
-
-                    <div className="d-flex flex-column mb-2">
-                        <label className="fw-bold fs-2 mb-2 color6" htmlFor="body">Body</label>
-                        <textarea
-                            id="body"
-                            placeholder="Enter body content"
-                            value={newNews.body}
-                            onChange={(e) => handleInputChange(e, 'body', 'new')}
-                        />
-                    </div>
-
-                    <div className="d-flex flex-column mb-2">
-                        <label className="fw-bold fs-2 mb-2 color6" htmlFor="author">Author</label>
-                        <input
-                            type="text"
-                            id="author"
-                            placeholder="Enter author name"
-                            value={newNews.author}
-                            onChange={(e) => handleInputChange(e, 'author', 'new')}
-                        />
-                    </div>
-
-                    <div className="d-flex flex-column mb-5">
-                        <label className="fw-bold fs-2 mb-2 color6" htmlFor="archiveDate">Archive Date (must be at least 30 days after the date of publication)</label>
-                        <input
-                            type="date"
-                            id="archiveDate"
-                            value={newNews.archiveDate}
-                            onChange={(e) => handleInputChange(e, 'archiveDate', 'new')}
-                        />
-                    </div>
-
-                    <button type="submit" className="border-0 rounded-2 mb-2 py-1 w-100 text-light bg-color6">Create News</button>
-                </form>
-            </div>
-
-            {/* Modal for editing news */}
-            {isModalOpen && editingNews && (
-                <div className="modal">
-                    <div className="modal-content">
-                        <h2>Edit News</h2>
-
-                        <form>
-                            <div className="d-flex flex-column">
-                                <label className="fw-bold mb-2" htmlFor="title">Title</label>
-                                <input
-                                    type="text"
-                                    id="title"
-                                    placeholder="Enter title"
-                                    value={editingNews.title}
-                                    onChange={(e) => handleInputChange(e, 'title', 'edit')}
-                                />
-                            </div>
-
-                            <div className="d-flex flex-column">
-                                <label className="fw-bold mb-2" htmlFor="body">Body</label>
-                                <textarea
-                                    id="body"
-                                    placeholder="Enter body content"
-                                    value={editingNews.body}
-                                    onChange={(e) => handleInputChange(e, 'body', 'edit')}
-                                />
-                            </div>
-
-                            <div className="d-flex flex-column">
-                                <label className="fw-bold mb-2" htmlFor="author">Author</label>
-                                <input
-                                    type="text"
-                                    id="author"
-                                    placeholder="Enter author name"
-                                    value={editingNews.author}
-                                    onChange={(e) => handleInputChange(e, 'author', 'edit')}
-                                />
-                            </div>
-
-                            <div className="d-flex flex-column">
-                                <label className="fw-bold mb-2" htmlFor="archiveDate">Archive Date</label>
-                                <input
-                                    type="date"
-                                    id="archiveDate"
-                                    value={editingNews.archiveDate}
-                                    onChange={(e) => handleInputChange(e, 'archiveDate', 'edit')}
-                                />
-                            </div>
-
-                            <button type="button" onClick={() => handleUpdateNews(editingNews.id!)}>Save changes</button>
-                            <button type="button" onClick={closeModal}>Close</button>
-                        </form>
-                    </div>
-                </div>
+            {/* NewsModal for Editing News */}
+            {editingNews && (
+                <NewsModal
+                    news={editingNews}
+                    isOpen={isEditModalOpen}
+                    isEditing={true}
+                    onClose={() => setIsEditModalOpen(false)}
+                    onConfirm={handleUpdateNews}
+                    onInputChange={(e, field) => handleInputChange(e, field, true)}
+                />
             )}
         </div>
     );
