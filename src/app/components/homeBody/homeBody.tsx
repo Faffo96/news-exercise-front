@@ -110,15 +110,49 @@ const HomeBody = () => {
 
     return (
         <div className="container">
-            <h1 className="mb-5">News Articles</h1>
+            <h1 className="mb-5 color6">News Articles</h1>
 
-            <div className="d-flex flex-column mb-4">
-                <h2 className="mb-2">Create news</h2>
+            {/* Checkbox to toggle active news */}
+            <div className="mb-4">
+                <label>
+                    <input
+                        className="mb-2 me-2"
+                        type="checkbox"
+                        checked={onlyActive}
+                        onChange={handleCheckboxChange}
+                    />
+                    <span className="fw-bold fs-3 color6">Show only active news</span>
+                </label>
+            </div>
+
+            {/* Render loading state */}
+            {loading && <OverlaySpinner />}
+
+            {/* Display list of news */}
+            {!loading && newsList.length > 0 && (
+                <ul className="d-flex row align-items-center row-cols-3 gap-3">
+                    {newsList.map((news) => (
+                        <li className="card mb-3 bg-color2 border border-2 border-green rounded-2" key={news.id}>
+                            <h2 className="color4 mb-4"><span className="fw-bold color6">Title: </span>{news.title}</h2>
+                            <p className="color4"><span className="fw-bold color6">Body: </span>{news.body}</p>
+                            <p className="color4"><span className="fw-bold color6">Release date: </span>{news.releaseDate!}</p>
+                            <p className="color4"><span className="fw-bold color6">Archive date: </span>{news.archiveDate}</p>
+                            <div>
+                                <button className="border-0 rounded-2 mb-2 py-1 w-100 text-light bg-color6" onClick={() => openModal(news)}>Update</button>
+                                <button className="border-0 rounded-2 mb-2 py-1 w-100 px-5 text-light bg-danger" onClick={() => handleDeleteNews(news.id!)}>Delete</button>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            )}
+
+<div className="d-flex flex-column align-items-center mb-4">
+                <h2 className="mb-5 color6 fw-bold fs-1">Create news</h2>
 
                 {/* Form for creating news */}
-                <form onSubmit={handleCreateNews}>
+                <form className="w-25" onSubmit={handleCreateNews}>
                     <div className="d-flex flex-column mb-2">
-                        <label className="fw-bold fs-2 mb-2" htmlFor="title">Title</label>
+                        <label className="fw-bold fs-2 mb-2 color6" htmlFor="title">Title</label>
                         <input
                             type="text"
                             id="title"
@@ -129,7 +163,7 @@ const HomeBody = () => {
                     </div>
 
                     <div className="d-flex flex-column mb-2">
-                        <label className="fw-bold fs-2 mb-2" htmlFor="body">Body</label>
+                        <label className="fw-bold fs-2 mb-2 color6" htmlFor="body">Body</label>
                         <textarea
                             id="body"
                             placeholder="Enter body content"
@@ -139,7 +173,7 @@ const HomeBody = () => {
                     </div>
 
                     <div className="d-flex flex-column mb-2">
-                        <label className="fw-bold fs-2 mb-2" htmlFor="author">Author</label>
+                        <label className="fw-bold fs-2 mb-2 color6" htmlFor="author">Author</label>
                         <input
                             type="text"
                             id="author"
@@ -149,8 +183,8 @@ const HomeBody = () => {
                         />
                     </div>
 
-                    <div className="d-flex flex-column mb-2">
-                        <label className="fw-bold fs-2 mb-2" htmlFor="archiveDate">Archive Date (must be at least 30 days after the date of publication)</label>
+                    <div className="d-flex flex-column mb-5">
+                        <label className="fw-bold fs-2 mb-2 color6" htmlFor="archiveDate">Archive Date (must be at least 30 days after the date of publication)</label>
                         <input
                             type="date"
                             id="archiveDate"
@@ -159,43 +193,9 @@ const HomeBody = () => {
                         />
                     </div>
 
-                    <button type="submit" className="bg-primary">Create News</button>
+                    <button type="submit" className="border-0 rounded-2 mb-2 py-1 w-100 text-light bg-color6">Create News</button>
                 </form>
             </div>
-
-            {/* Checkbox to toggle active news */}
-            <div>
-                <label>
-                    <input
-                        className="mb-2"
-                        type="checkbox"
-                        checked={onlyActive}
-                        onChange={handleCheckboxChange}
-                    />
-                    Show only active news
-                </label>
-            </div>
-
-            {/* Render loading state */}
-            {loading && <OverlaySpinner />}
-
-            {/* Display list of news */}
-            {!loading && newsList.length > 0 && (
-                <ul>
-                    {newsList.map((news) => (
-                        <li className="mb-3" key={news.id}>
-                            <h2>{news.title}</h2>
-                            <p>{news.body}</p>
-                            <p>Release date: {news.releaseDate!}</p>
-                            <p>Archive date: {news.archiveDate}</p>
-                            <div>
-                                <button onClick={() => openModal(news)}>Update</button>
-                                <button onClick={() => handleDeleteNews(news.id!)}>Delete</button>
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-            )}
 
             {/* Modal for editing news */}
             {isModalOpen && editingNews && (
