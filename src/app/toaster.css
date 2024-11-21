@@ -1,0 +1,16 @@
+.Toastify__toast-container--top-right {
+    top: 159px!important;
+  }
+
+:root {
+    --toastify-color-success: rgb(66, 66, 240)!important;
+    --toastify-icon-color-success: rgb(66, 66, 240)!important;
+    --toastify-color-progress-success: rgb(66, 66, 240)!important;
+
+}
+
+@media screen and (min-width: 1200px) {
+  .Toastify__toast-container--top-right {
+    top: 130px!important;
+  }
+}
