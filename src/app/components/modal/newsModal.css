@@ -10,20 +10,6 @@
     align-items: center;
 }
 
-.card {
-    width: 30%!important;
-}
-
-.card-add {
-    width: 500px;
-    height: 468px;
-    font-size: 10rem;
-}
-
-.border-green {
-    border-color: #087669!important;
-}
-
 .modal-content {
     background: white;
     padding: 20px;
@@ -36,6 +22,24 @@
     width: 100%;
     margin-bottom: 10px;
 }
+
+.modal-checkbox {
+    width: 30px!important;
+}
+
+.green-btn-modale, .red-btn-modale {
+    width: 150px;
+}
+
+.green-btn-modale {
+    background-color: #087669!important;
+}
+
+.red-btn-modale {
+    background-color: rgb(163, 163, 163)!important;
+
+}
+
 
 
 

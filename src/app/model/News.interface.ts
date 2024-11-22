@@ -1,4 +1,7 @@
 // src/types/index.ts
+
+import { Subcategory } from "./Subcategory.interface";
+
 export interface News {
     id?: string;
     title: string;
@@ -6,5 +9,7 @@ export interface News {
     author: string;
     releaseDate: string;
     archiveDate: string;
+    mainCategory: string;
+    otherCategoriesList: string;
+    subcategoriesList: Subcategory[] | number[];
 }
-

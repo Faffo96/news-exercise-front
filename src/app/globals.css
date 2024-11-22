@@ -65,7 +65,11 @@
     background: linear-gradient(115deg, rgba(107, 0, 247, 1) 0%, rgba(163, 99, 246, 1) 50%, rgba(103, 174, 255, 1) 100%);
 }
 
-.hover-bright20 {
+.hover-bright--10:hover {
+    filter: brightness(90%)!important;
+}
+
+.hover-bright20, .hover-bright--10 {
     transition: filter 0.3s ease!important;
 }
 
