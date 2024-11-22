@@ -1,6 +1,6 @@
 // src/services/MyHttpService.ts
 import axios, { AxiosRequestConfig } from 'axios';
-import { validateEnvVariables } from './envUtils';
+/* import { validateEnvVariables } from './envUtils'; */
 import { myCookieService } from './cookieService';
 
 class MyHttpService {
@@ -8,9 +8,9 @@ class MyHttpService {
     constructor() { }
 
     private get backendBaseUrl() {
-        if (!validateEnvVariables()) return false;
-        console.log("Backend URL:", process.env.NEXT_PUBLIC_BACKEND_BASE_URL);  // Debug
-        return process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
+        /* if (!validateEnvVariables()) return false;
+        return process.env.NEXT_PUBLIC_BACKEND_BASE_URL; */
+        return 'monetary-averil-faffo-0380912b.koyeb.app/';
     }
 
     public async get(url: string) {
