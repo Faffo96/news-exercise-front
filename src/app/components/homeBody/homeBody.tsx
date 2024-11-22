@@ -196,7 +196,7 @@ const HomeBody = () => {
             {loading && <OverlaySpinner />}
 
             {/* News List */}
-            {!loading && filteredNews.length > 0 && (
+            {!loading && (
                 <ul className="row align-items-center row-cols-3 gap-3">
                     {filteredNews.map((news) => (
                         <li className="card mb-3 bg-color2 border border-2 border-green rounded-2" key={news.id}>
@@ -231,7 +231,7 @@ const HomeBody = () => {
                         </button>
                     </li>
                 </ul>
-            )}
+                )}
 
             {/* NewsModal for Creating News */}
             <NewsModal
