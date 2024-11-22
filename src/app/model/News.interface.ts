@@ -11,5 +11,5 @@ export interface News {
     archiveDate: string;
     mainCategory: string;
     otherCategoriesList: string;
-    subcategoriesList: Subcategory[] | number[];
+    subcategoriesList: Subcategory[];
 }

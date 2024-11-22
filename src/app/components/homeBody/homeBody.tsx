@@ -36,13 +36,18 @@ const HomeBody = () => {
             const response = await myHttpService.get("/api/subcategories");
             const data: Subcategory[] = response.data;
             setSubcategories(data);
-            console.log("data: " + data);
-            const uniqueMainCategories = Array.from(new Set(data.map(sub => sub.mainCategory)));
+            console.log("data: ", data);
+    
+            const uniqueMainCategories = Array.from(
+                new Set(data.map(sub => sub.mainCategory).filter((main): main is string => main !== undefined))
+            );
+    
             setMainCategories(uniqueMainCategories);
         } catch (error) {
             console.error("Error fetching subcategories:", error);
         }
     };
+    
 
     const fetchNews = async () => {
         setLoading(true);
