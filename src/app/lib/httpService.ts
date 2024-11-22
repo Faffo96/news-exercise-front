@@ -9,6 +9,7 @@ class MyHttpService {
 
     private get backendBaseUrl() {
         if (!validateEnvVariables()) return false;
+        console.log("Backend URL:", process.env.NEXT_PUBLIC_BACKEND_BASE_URL);  // Debug
         return process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
     }
 

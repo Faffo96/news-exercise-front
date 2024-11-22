@@ -23,8 +23,6 @@ const HomeBody = () => {
     const [mainCategoryFilter, setMainCategoryFilter] = useState<string>("all");
     const [subcategoryFilter, setSubcategoryFilter] = useState<string>("all");
 
-
-
     useEffect(() => {
 
         fetchSubcategories();
@@ -33,7 +31,7 @@ const HomeBody = () => {
 
     const fetchSubcategories = async () => {
         try {
-            const response = await myHttpService.get("/api/subcategories");
+            const response = await  myHttpService.get('/api/subcategories');
             const data: Subcategory[] = response.data;
             setSubcategories(data);
             console.log("data: ", data);
