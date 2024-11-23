@@ -8,13 +8,15 @@ import { useEffect, useState } from "react";
 import OverlaySpinner from "../overlaySpinner/overlaySpinner";
 import NewsModal from "../modal/newsModal";
 import { Subcategory } from "@/app/model/Subcategory.interface";
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/redux/store";
 
 const HomeBody = () => {
     const [newsList, setNewsList] = useState<News[]>([]);
     const [filteredNews, setFilteredNews] = useState<News[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [filterOption, setFilterOption] = useState<string>("all");
-    const [newNews, setNewNews] = useState<News>({ title: '', body: '', author: '', archiveDate: '', releaseDate: '', mainCategory: '', otherCategoriesList: '', subcategoriesList: [] });
+    const [newNews, setNewNews] = useState<News>({ title: '', body: '', author: '', archiveDate: '', releaseDate: '', mainCategory: '', otherCategoriesList: [], subcategoriesList: [] });
     const [editingNews, setEditingNews] = useState<News | null>(null);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
@@ -22,6 +24,9 @@ const HomeBody = () => {
     const [mainCategories, setMainCategories] = useState<string[]>([]);
     const [mainCategoryFilter, setMainCategoryFilter] = useState<string>("all");
     const [subcategoryFilter, setSubcategoryFilter] = useState<string>("all");
+    const mainCategoryPOST = useSelector((state: RootState) => state.news.mainCategory);
+    const mainCategoriesPOST = useSelector((state: RootState) => state.news.otherCategoriesList);
+    const subcategoriesPOST = useSelector((state: RootState) => state.news.subcategoriesList);
 
     useEffect(() => {
 
@@ -97,10 +102,13 @@ const HomeBody = () => {
     const handleCreateNews = async () => {
         setLoading(true);
         try {
+            newNews.otherCategoriesList = mainCategoriesPOST;
+            newNews.mainCategory = mainCategoryPOST;
+            newNews.subcategoriesList = subcategoriesPOST;
             const response = await myHttpService.post('/api/news', newNews);
             setNewsList([...newsList, response.data]);
             showToast("success", "News created successfully.");
-            setNewNews({ title: '', body: '', author: '', archiveDate: '', releaseDate: '', mainCategory: '', otherCategoriesList: '', subcategoriesList: [] });
+            setNewNews({ title: '', body: '', author: '', archiveDate: '', releaseDate: '', mainCategory: '', otherCategoriesList: [], subcategoriesList: [] });
             setIsCreateModalOpen(false);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
@@ -202,6 +210,25 @@ const HomeBody = () => {
                         <li className="card mb-3 bg-color2 border border-2 border-green rounded-2" key={news.id}>
                             <h2 className="color4 mb-4"><span className="fw-bold color6">Title: </span>{news.title}</h2>
                             <p className="color4"><span className="fw-bold color6">Author: </span>{news.author}</p>
+                            <p className="color4"><span className="fw-bold color6">Categories: </span>{news.mainCategory}</p>
+                            <p className="color4">
+                                <span className="fw-bold color6">Other categories: </span>
+                                {Array.isArray(news.otherCategoriesList) ? news.otherCategoriesList.join(', ') : 'No categories available'}
+                            </p>
+                            <p className="color4">
+                                <span className="fw-bold color6">Subcategories: </span>
+                                {Array.isArray(news.subcategoriesList) && news.subcategoriesList.length > 0 ? (
+                                    news.subcategoriesList.map((subcategory, index) => (
+                                        <span key={index}>
+                                            {subcategory.subcategory}{index < news.subcategoriesList.length - 1 ? ', ' : ''}
+                                        </span>
+                                    ))
+                                ) : (
+                                    'No subcategories available'
+                                )}
+                            </p>
+
+
                             <p className="color4"><span className="fw-bold color6">Body: </span>{news.body}</p>
                             <p className="color4"><span className="fw-bold color6">Release date: </span>{news.releaseDate}</p>
                             <p className="color4"><span className="fw-bold color6">Archive date: </span>{news.archiveDate}</p>

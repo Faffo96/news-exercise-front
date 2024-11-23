@@ -10,6 +10,6 @@ export interface News {
     releaseDate: string;
     archiveDate: string;
     mainCategory: string;
-    otherCategoriesList: string;
+    otherCategoriesList: string[];
     subcategoriesList: Subcategory[];
 }

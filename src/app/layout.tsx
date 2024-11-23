@@ -7,6 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ToastContainer } from "react-toastify";
 import Script from "next/script";
+import SessionWrapper from "./components/sessionWrapper";
 
 
 const geistSans = localFont({
@@ -31,24 +32,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`bg-color1 ${geistSans.variable} ${geistMono.variable}`}>
-      <Script
-              src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
-              strategy="lazyOnload"
-            />
-            <ToastContainer
-              position="top-right"
-              autoClose={3000}
-              hideProgressBar={false}
-              newestOnTop
-              closeOnClick
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-            />
-        {children}
-      </body>
-    </html>
+    <SessionWrapper>
+      <html lang="en">
+        <body className={`bg-color1 ${geistSans.variable} ${geistMono.variable}`}>
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+          />
+          {children}
+          <Script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+            strategy="lazyOnload"
+          />
+        </body>
+      </html>
+    </SessionWrapper>
   );
 }
