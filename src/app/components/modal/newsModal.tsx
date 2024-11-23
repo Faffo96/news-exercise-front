@@ -27,41 +27,58 @@ const NewsModal: React.FC<NewsModalProps> = ({
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const [selectedMainCategory, setSelectedMainCategory] = useState<string>("");
     const [selectedSubcategories, setSelectedSubcategories] = useState<number[]>([]);
-
-    
+    const [selectedOtherCategories, setSelectedOtherCategories] = useState<string[]>([]); // Stato per altre categorie
 
     useEffect(() => {
-        // Reset errors when modal is opened or closed
         if (isOpen) {
             setErrors({});
-            setSelectedMainCategory(""); 
-            setSelectedSubcategories([]); 
+            setSelectedMainCategory("");
+            setSelectedSubcategories([]);
+            setSelectedOtherCategories([]); // Resetta altre categorie
         }
     }, [isOpen]);
 
     const handleMainCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedCategory = e.target.value;
+    
         setSelectedMainCategory(selectedCategory);
-
-        // Resetta la selezione delle sottocategorie quando cambiamo la categoria principale
-        setSelectedSubcategories([]);
+    
+        // Aggiorna le otherCategories, rimuovendo la vecchia mainCategory
+        setSelectedOtherCategories((prevState) => {
+            const filteredCategories = prevState.filter(
+                (category) => category !== selectedMainCategory
+            );
+            return selectedCategory
+                ? [...filteredCategories, selectedCategory]
+                : filteredCategories;
+        });
+    
+        setSelectedSubcategories([]); // Resetta le subcategories selezionate
     };
+    
 
     const handleSubcategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const subcategoryId = parseInt(e.target.value);
-        setSelectedSubcategories(prevState => 
-            e.target.checked 
-            ? [...prevState, subcategoryId] 
-            : prevState.filter(id => id !== subcategoryId)
+        setSelectedSubcategories(prevState =>
+            e.target.checked
+                ? [...prevState, subcategoryId]
+                : prevState.filter(id => id !== subcategoryId)
         );
     };
 
-    // Filtra le sottocategorie in base alla categoria principale selezionata
-    const filteredSubcategories = subcategories.filter(subcategory => 
+    const handleOtherCategoriesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const category = e.target.value;
+        setSelectedOtherCategories(prevState =>
+            e.target.checked
+                ? [...prevState, category]
+                : prevState.filter(cat => cat !== category)
+        );
+    };
+
+    const filteredSubcategories = subcategories.filter(subcategory =>
         subcategory.mainCategory === selectedMainCategory
     );
 
-    // Validation function
     const validateField = (value: string, field: string) => {
         let errorMessage = "";
 
@@ -108,6 +125,7 @@ const NewsModal: React.FC<NewsModalProps> = ({
                 <h2 className="color6 mb-4">{isEditing ? "Edit News" : "Create News"}</h2>
 
                 <form className="color6">
+                    {/* Input per il titolo */}
                     <div className="d-flex flex-column">
                         <label className="fw-bold mb-2" htmlFor="title">Title</label>
                         <input
@@ -121,6 +139,7 @@ const NewsModal: React.FC<NewsModalProps> = ({
                         {errors.title && <span className="fw-bold text-danger mb-2">{errors.title}</span>}
                     </div>
 
+                    {/* Input per il corpo */}
                     <div className="d-flex flex-column">
                         <label className="fw-bold mb-2" htmlFor="body">Body</label>
                         <textarea
@@ -133,66 +152,62 @@ const NewsModal: React.FC<NewsModalProps> = ({
                         {errors.body && <span className="fw-bold text-danger mb-2">{errors.body}</span>}
                     </div>
 
-                    <div className="d-flex flex-column">
-                        <label className="fw-bold mb-2" htmlFor="author">Author</label>
-                        <input
-                            className="border-green rounded-2 p-2"
-                            type="text"
-                            id="author"
-                            placeholder="Enter author name"
-                            value={news.author}
-                            onChange={(e) => handleInputChange(e, "author")}
-                        />
-                        {errors.author && <span className="fw-bold text-danger mb-2">{errors.author}</span>}
-                    </div>
-
-                    <div className="d-flex flex-column">
-                        <label className="fw-bold mb-2" htmlFor="archiveDate">Archive Date</label>
-                        <input
-                            className="border-green rounded-2 p-2"
-                            type="date"
-                            id="archiveDate"
-                            value={news.archiveDate}
-                            onChange={(e) => handleInputChange(e, "archiveDate")}
-                        />
-                        {errors.archiveDate && <span className="fw-bold text-danger mb-2">{errors.archiveDate}</span>}
-                    </div>
-
-                    {/* Main Category */}
+                    {/* Categoria principale */}
                     <div className="d-flex flex-column mb-2">
                         <label className="fw-bold mb-2" htmlFor="mainCategory">Main Category</label>
                         <select
-                            id="mainCategory"
                             value={selectedMainCategory}
                             onChange={handleMainCategoryChange}
-                            className="border-green rounded-2 p-2"
+                            className="form-select"
                         >
-                            <option value="">Select Main Category</option>
-                            {mainCategories.map((category, index) => (
-                                <option key={index} value={category}>{category}</option>
+                            <option value="">Select a Main Category</option>
+                            {mainCategories.map((category) => (
+                                <option key={category} value={category}>
+                                    {category}
+                                </option>
                             ))}
                         </select>
                     </div>
 
-                    {/* Subcategories */}
+                    {/* Checkbox per altre categorie */}
+                    <div className="d-flex flex-column mb-4">
+                        <label className="fw-bold mb-2">Other Categories</label>
+                        {mainCategories.map((category) => (
+                            <div key={category}>
+                                <input
+                                    type="checkbox"
+                                    id={`other-category-${category}`}
+                                    value={category}
+                                    checked={selectedOtherCategories.includes(category)}
+                                    disabled={selectedMainCategory === category}
+                                    onChange={handleOtherCategoriesChange}
+                                />
+                                <label htmlFor={`other-category-${category}`}>{category}</label>
+                            </div>
+                        ))}
+                    </div>
+
+
+                    {/* Sottocategorie */}
                     {selectedMainCategory && (
                         <div className="d-flex flex-column mb-4">
                             <label className="fw-bold mb-2">Subcategories</label>
-                            {filteredSubcategories.map(subcategory => (
-                                <div className="d-flex align-items-center mb-2" key={subcategory.id}>
+                            {filteredSubcategories.map((subcategory) => (
+                                <div key={subcategory.id}>
                                     <input
-                                    className="w-0 mb-0 me-2 modal-checkbox"
                                         type="checkbox"
+                                        id={`subcategory-${subcategory.id}`}
                                         value={subcategory.id}
                                         checked={selectedSubcategories.includes(subcategory.id!)}
                                         onChange={handleSubcategoryChange}
                                     />
-                                    <label>{subcategory.subcategory}</label>
+                                    <label htmlFor={`subcategory-${subcategory.id}`}>{subcategory.subcategory}</label>
                                 </div>
                             ))}
                         </div>
                     )}
 
+                    {/* Pulsanti */}
                     <button
                         type="button"
                         onClick={onClose}

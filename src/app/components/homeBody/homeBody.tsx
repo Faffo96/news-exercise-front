@@ -31,21 +31,21 @@ const HomeBody = () => {
 
     const fetchSubcategories = async () => {
         try {
-            const response = await  myHttpService.get('/api/subcategories');
+            const response = await myHttpService.get('/api/subcategories');
             const data: Subcategory[] = response.data;
             setSubcategories(data);
             console.log("data: ", data);
-    
+
             const uniqueMainCategories = Array.from(
                 new Set(data.map(sub => sub.mainCategory).filter((main): main is string => main !== undefined))
             );
-    
+
             setMainCategories(uniqueMainCategories);
         } catch (error) {
             console.error("Error fetching subcategories:", error);
         }
     };
-    
+
 
     const fetchNews = async () => {
         setLoading(true);
@@ -84,7 +84,7 @@ const HomeBody = () => {
                     news.subcategoriesList.some(subcategory => subcategory.subcategory === subcategoryFilter)
                 );
             }
-            
+
 
             setFilteredNews(filtered);
         };
@@ -207,7 +207,7 @@ const HomeBody = () => {
                             <p className="color4"><span className="fw-bold color6">Archive date: </span>{news.archiveDate}</p>
                             <div>
                                 <button
-                                    className="border-0 hover-bright20 rounded-2 mb-2 py-1 w-100 text-light bg-color6"
+                                    className="border-0 hover-bright20 rounded-2 mb-2 py-1 w-100 text-light color6 bg-color6"
                                     onClick={() => {
                                         setEditingNews(news);
                                         setIsEditModalOpen(true);
@@ -231,7 +231,7 @@ const HomeBody = () => {
                         </button>
                     </li>
                 </ul>
-                )}
+            )}
 
             {/* NewsModal for Creating News */}
             <NewsModal
