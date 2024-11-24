@@ -3,9 +3,9 @@
   }
 
 :root {
-    --toastify-color-success: rgb(66, 66, 240)!important;
-    --toastify-icon-color-success: rgb(66, 66, 240)!important;
-    --toastify-color-progress-success: rgb(66, 66, 240)!important;
+    --toastify-color-success: #087669!important;
+    --toastify-icon-color-success: #087669!important;
+    --toastify-color-progress-success: #087669!important;
 
 }
 

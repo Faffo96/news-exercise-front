@@ -6,6 +6,7 @@ import { myHttpService } from "@/app/lib/httpService";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/app/redux/store";
 import { fetchNews } from "@/app/redux/newsSlice";
+import OverlaySpinner from "../overlaySpinner/overlaySpinner";
 
 interface CreateNewsModalProps {
     isOpen: boolean;
@@ -36,6 +37,7 @@ const CreateNewsModal: React.FC<CreateNewsModalProps> = ({
     const [selectedMainCategory, setSelectedMainCategory] = useState<string>("");
     const [selectedSubcategories, setSelectedSubcategories] = useState<number[]>([]);
     const [selectedOtherCategories, setSelectedOtherCategories] = useState<string[]>([]);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
@@ -141,9 +143,11 @@ const CreateNewsModal: React.FC<CreateNewsModalProps> = ({
         };
 
         try {
+            setLoading(true);
             const response = await myHttpService.post(`/api/news`, newNews);
 
             if (response.status !== 201) {
+                setLoading(false);
                 throw new Error("Failed to create news.");
             }
 
@@ -158,6 +162,7 @@ const CreateNewsModal: React.FC<CreateNewsModalProps> = ({
                 submit: error?.message || "Error creating news. Please try again later.",
             }));
         } finally {
+            setLoading(false);
             dispatch(fetchNews());
         }
     };
@@ -314,6 +319,7 @@ const CreateNewsModal: React.FC<CreateNewsModalProps> = ({
                     </div>
                 </form>
             </div>
+            {loading && <OverlaySpinner />}
         </div>
     );
 };

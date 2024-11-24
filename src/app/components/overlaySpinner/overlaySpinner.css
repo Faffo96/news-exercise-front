@@ -16,7 +16,7 @@
 .spinner {
     width: 100px;
     height: 100px;
-    color: rgb(66, 66, 240);
+    color: #087669;
     z-index: 1051;
 }
 
@@ -31,7 +31,7 @@
     }
    
     .home-card-1-2 {
-        border-right: 1px solid rgb(66, 66, 240) !important;
+        border-right: 1px solid #087669 !important;
     }
     
 }

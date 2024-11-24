@@ -5,6 +5,7 @@ import { myHttpService } from "@/app/lib/httpService";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/app/redux/store";
 import { fetchNews } from "@/app/redux/newsSlice";
+import OverlaySpinner from "../overlaySpinner/overlaySpinner";
 
 interface UpdateNewsModalProps {
     news: News;
@@ -30,6 +31,8 @@ const UpdateNewsModal: React.FC<UpdateNewsModalProps> = ({
     const [selectedMainCategory, setSelectedMainCategory] = useState<string>("");
     const [selectedSubcategories, setSelectedSubcategories] = useState<number[]>([]);
     const [selectedOtherCategories, setSelectedOtherCategories] = useState<string[]>([]);
+    const [loading, setLoading] = useState(false);
+
 
     useEffect(() => {
         if (isOpen) {
@@ -133,9 +136,11 @@ const UpdateNewsModal: React.FC<UpdateNewsModalProps> = ({
         };
 
         try {
+            setLoading(true);
             const response = await myHttpService.put(`/api/news/${news.id}`, updatedNews);
 
             if (response.status !== 200) {
+                setLoading(false);
                 throw new Error("Failed to update news.");
             }
 
@@ -154,6 +159,7 @@ const UpdateNewsModal: React.FC<UpdateNewsModalProps> = ({
                 submit: error?.message || "Error updating news. Please try again later.",
             }));
         } finally {
+            setLoading(false);
             dispatch(fetchNews());
         }
     };
@@ -287,6 +293,7 @@ const UpdateNewsModal: React.FC<UpdateNewsModalProps> = ({
                     </button>
                 </div>
             </div>
+            {loading && <OverlaySpinner />}
         </div>
     );
 };
