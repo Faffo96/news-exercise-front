@@ -26,6 +26,7 @@ const newsSlice = createSlice({
         selectedOtherCategories: [] as string[], // Altre categorie selezionate
         status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
         error: null as string | null,
+        loading: false
     },
     reducers: {
         setSelectedMainCategory: (state, action) => {
@@ -63,33 +64,41 @@ const newsSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(fetchNews.pending, (state) => {
+                state.loading = true;
                 state.status = 'loading';
             })
             .addCase(fetchNews.fulfilled, (state, action) => {
+                state.loading = false;
                 state.status = 'succeeded';
                 state.newsList = action.payload;
                 state.filteredNews = action.payload; // Filtra immediatamente dopo il fetch
             })
             .addCase(fetchNews.rejected, (state, action) => {
+                state.loading = false;
                 state.status = 'failed';
                 state.error = action.error.message || 'Something went wrong';
             })
             .addCase(createNews.pending, (state) => {
+                state.loading = true;
                 state.status = 'loading';
             })
             .addCase(createNews.fulfilled, (state, action) => {
+                state.loading = false;
                 state.status = 'succeeded';
                 state.newsList.push(action.payload);
                 state.filteredNews.push(action.payload);
             })
             .addCase(createNews.rejected, (state, action) => {
+                state.loading = false;
                 state.status = 'failed';
                 state.error = action.error.message || 'Something went wrong';
             })
             .addCase(updateNews.pending, (state) => {
+                state.loading = true;
                 state.status = 'loading';
             })
             .addCase(updateNews.fulfilled, (state, action) => {
+                state.loading = false;
                 state.status = 'succeeded';
             
                 // Aggiorna newsList con un nuovo riferimento
@@ -104,6 +113,7 @@ const newsSlice = createSlice({
             })
             
             .addCase(updateNews.rejected, (state, action) => {
+                state.loading = false;
                 state.status = 'failed';
                 state.error = action.error.message || 'Something went wrong';
             });

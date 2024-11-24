@@ -16,7 +16,7 @@ import CreateNewsModal from "../createNewsModal/createNewsModal";
 const HomeBody = () => {
     const dispatch = useDispatch<AppDispatch>();
 
-    const { newsList, status: newsStatus } = useSelector((state: RootState) => state.news);
+    const { newsList, status: newsStatus, loading: newsLoading } = useSelector((state: RootState) => state.news);
     const { subcategories, loading: subcategoriesLoading } = useSelector(
         (state: RootState) => state.subcategories
     );
@@ -135,7 +135,13 @@ const HomeBody = () => {
                 </div>
             </div>
 
-            {/* Loading Spinner */}
+            {/* NewsLoading Loading Spinner */}
+            {newsLoading && <OverlaySpinner />}
+
+            {/* MainCategoriesStatus Loading Spinner */}
+            {mainCategoriesStatus === "loading" && <OverlaySpinner />}
+
+            {/* Subcategories Loading Spinner */}
             {subcategoriesLoading && <OverlaySpinner />}
 
             {/* News List */}
