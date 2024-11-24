@@ -15,7 +15,7 @@ export const showToast = (type: "success" | "error" | "info", message: string) =
             toast.info(message);
             break;
         default:
-            toast(message); // Notifica di default
+            toast(message);
             break;
     }
 };

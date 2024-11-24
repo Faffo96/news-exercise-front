@@ -10,7 +10,6 @@ class MyHttpService {
     private get backendBaseUrl() {
         if (!validateEnvVariables()) return false;
         return process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
-        /* return 'https://monetary-averil-faffo-0380912b.koyeb.app'; */
     }
 
     public async get(url: string) {

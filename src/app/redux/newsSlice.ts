@@ -79,8 +79,8 @@ const newsSlice = createSlice({
             })
             .addCase(createNews.fulfilled, (state, action) => {
                 state.status = 'succeeded';
-                state.newsList.push(action.payload); // Aggiungi la nuova notizia
-                state.filteredNews.push(action.payload); // Aggiungi anche alla lista filtrata
+                state.newsList.push(action.payload);
+                state.filteredNews.push(action.payload);
             })
             .addCase(createNews.rejected, (state, action) => {
                 state.status = 'failed';
@@ -91,12 +91,18 @@ const newsSlice = createSlice({
             })
             .addCase(updateNews.fulfilled, (state, action) => {
                 state.status = 'succeeded';
-                const index = state.newsList.findIndex(news => news.id === action.payload.id);
-                if (index !== -1) {
-                    state.newsList[index] = action.payload;
-                    state.filteredNews[index] = action.payload; // Aggiorna anche nella lista filtrata
-                }
+            
+                // Aggiorna newsList con un nuovo riferimento
+                state.newsList = state.newsList.map(news =>
+                    news.id === action.payload.id ? action.payload : news
+                );
+            
+                // Aggiorna filteredNews con un nuovo riferimento, nel caso in cui venga utilizzato per la visualizzazione filtrata
+                state.filteredNews = state.filteredNews.map(news =>
+                    news.id === action.payload.id ? action.payload : news
+                );
             })
+            
             .addCase(updateNews.rejected, (state, action) => {
                 state.status = 'failed';
                 state.error = action.error.message || 'Something went wrong';

@@ -12,7 +12,6 @@ const initialState: MainCategoriesState = {
     status: 'loading',
 };
 
-// Azione asincrona per ottenere le mainCategories
 export const fetchMainCategories = createAsyncThunk(
     'mainCategories/fetchMainCategories',
     async () => {

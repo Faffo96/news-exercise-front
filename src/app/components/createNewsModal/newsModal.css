@@ -15,6 +15,9 @@
     padding: 20px;
     border-radius: 5px;
     width: 400px;
+    max-height: 999px;
+    overflow-y: auto;
+
 }
 
 .modal-content input,
@@ -35,7 +38,7 @@
     background-color: #087669!important;
 }
 
-.red-btn-modale {
+.grey-btn-modale {
     background-color: rgb(163, 163, 163)!important;
 
 }

@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { myHttpService } from '../lib/httpService';
 
-// Definizione del tipo di stato
 interface Subcategory {
     id?: number;
     mainCategory?: string;
@@ -14,14 +13,12 @@ interface SubcategoriesState {
     error: string | null;
 }
 
-// Stato iniziale
 const initialState: SubcategoriesState = {
     subcategories: [],
     loading: false,
     error: null,
 };
 
-// Funzione asincrona per ottenere le subcategorie
 export const fetchSubcategories = createAsyncThunk(
     'subcategories/fetchSubcategories',
     async (sortBy: string) => {
@@ -30,7 +27,6 @@ export const fetchSubcategories = createAsyncThunk(
     }
 );
 
-// Creazione del slice
 const subcategoriesSlice = createSlice({
     name: 'subcategories',
     initialState,

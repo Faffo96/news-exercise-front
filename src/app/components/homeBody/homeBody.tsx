@@ -4,13 +4,14 @@ import "./homeBody.css";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import OverlaySpinner from "../overlaySpinner/overlaySpinner";
-import NewsModal from "../modal/newsModal";
 import { News } from "@/app/model/News.interface";
 import { Subcategory } from "@/app/model/Subcategory.interface";
 import { AppDispatch, RootState } from "@/app/redux/store";
-import { createNews, fetchNews, updateNews } from "@/app/redux/newsSlice";
+import { fetchNews } from "@/app/redux/newsSlice";
 import { fetchSubcategories } from "@/app/redux/subcategoriesSlice";
 import { fetchMainCategories } from "@/app/redux/mainCategoriesSlice";
+import UpdateNewsModal from "../updateNewsModal/updateNewsModal";
+import CreateNewsModal from "../createNewsModal/createNewsModal";
 
 const HomeBody = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -19,29 +20,31 @@ const HomeBody = () => {
     const { subcategories, loading: subcategoriesLoading } = useSelector(
         (state: RootState) => state.subcategories
     );
-    
+
     const { mainCategories, status: mainCategoriesStatus } = useSelector(
         (state: RootState) => state.mainCategories
     );
 
-    // Local state
     const [filteredNews, setFilteredNews] = useState<News[]>([]);
     const [filterOption, setFilterOption] = useState<string>("all");
     const [mainCategoryFilter, setMainCategoryFilter] = useState<string>("all");
     const [subcategoryFilter, setSubcategoryFilter] = useState<string>("all");
-    const [newNews, setNewNews] = useState<News>({ title: "", body: "", author: "", archiveDate: "", releaseDate: "", mainCategory: "", otherCategoriesList: [], subcategoriesList: [] });
-    const [editingNews, setEditingNews] = useState<News | null>(null);
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+    const [editingNews, setEditingNews] = useState<News | null>(null);
 
-    // Fetch data on component mount
+
+    const handleEditNews = (news: News) => {
+        setEditingNews(news);
+        setIsEditModalOpen(true);
+    };
+
     useEffect(() => {
         dispatch(fetchNews());
         dispatch(fetchSubcategories("id"));
-        dispatch(fetchMainCategories());  // Aggiungi questo per caricare le mainCategories
+        dispatch(fetchMainCategories());
     }, [dispatch]);
 
-    // Filter news whenever filters or news list changes
     useEffect(() => {
         const filterNews = () => {
             let filtered = newsList;
@@ -66,27 +69,9 @@ const HomeBody = () => {
         filterNews();
     }, [filterOption, mainCategoryFilter, subcategoryFilter, newsList]);
 
-    // Handle creating a new news
-    const handleCreateNews = async () => {
-        dispatch(createNews(newNews));
-        setNewNews({ title: "", body: "", author: "", archiveDate: "", releaseDate: "", mainCategory: "", otherCategoriesList: [], subcategoriesList: [] });
-        setIsCreateModalOpen(false);
-    };
-
-    // Handle updating an existing news
-    const handleUpdateNews = async () => {
-        if (!editingNews) return;
-
-        dispatch(updateNews(editingNews));
-        setIsEditModalOpen(false);
-    };
-
-    // Handle input changes for news creation/editing
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>, field: string, isEditing: boolean) => {
-        if (isEditing && editingNews) {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>, field: string) => {
+        if (editingNews) {
             setEditingNews({ ...editingNews, [field]: e.target.value });
-        } else {
-            setNewNews({ ...newNews, [field]: e.target.value });
         }
     };
 
@@ -131,7 +116,6 @@ const HomeBody = () => {
                     </select>
                 </div>
 
-
                 {/* Filter by subcategory */}
                 <div className="mb-4">
                     <label htmlFor="subcategory" className="fw-bold fs-3 color6">Subcategory:</label>
@@ -147,13 +131,12 @@ const HomeBody = () => {
                                 {subcategory.subcategory}
                             </option>
                         ))}
-
                     </select>
                 </div>
             </div>
 
             {/* Loading Spinner */}
-            {(subcategoriesLoading) && <OverlaySpinner />}
+            {subcategoriesLoading && <OverlaySpinner />}
 
             {/* News List */}
             {newsStatus === "succeeded" && (
@@ -185,45 +168,40 @@ const HomeBody = () => {
                             <div>
                                 <button
                                     className="border-0 hover-bright20 rounded-2 mb-2 py-1 w-100 text-light color6 bg-color6"
-                                    onClick={() => {
-                                        setEditingNews(news);
-                                        setIsEditModalOpen(true);
-                                    }}
+                                    onClick={() => handleEditNews(news)} // Pass the news to edit
                                 >
                                     Update
                                 </button>
                             </div>
                         </li>
                     ))}
+                    <button
+                        className="card-add hover-bright20 border-0 d-flex bg-color6 rounded-2 align-items-center justify-content-center"
+                        onClick={() => setIsCreateModalOpen(true)}
+                    >
+                        <span className="text-light">+</span>
+                    </button>
 
-                    <li className="px-0 list-unstyled">
-                        <button className="card-add hover-bright20 border-0 d-flex bg-color6 rounded-2 align-items-center justify-content-center" onClick={() => setIsCreateModalOpen(true)}>
-                            <span className="text-light">+</span>
-                        </button>
-                    </li>
                 </ul>
             )}
+            {/* Modal for creating news */}
+            {isCreateModalOpen && (
+                <CreateNewsModal
+                    isOpen={isCreateModalOpen}
+                    onClose={() => setIsCreateModalOpen(false)}
+                    mainCategories={mainCategories}
+                    subcategories={subcategories}
+                />
+            )}
 
-            {/* Modals */}
-            <NewsModal
-                news={newNews}
-                isOpen={isCreateModalOpen}
-                isEditing={false}
-                onClose={() => setIsCreateModalOpen(false)}
-                onConfirm={handleCreateNews}
-                onInputChange={(e, field) => handleInputChange(e, field, false)}
-                mainCategories={mainCategories}
-                subcategories={subcategories}
-            />
-
+            {/* Modal for editing news */}
             {editingNews && (
-                <NewsModal
+                <UpdateNewsModal
                     news={editingNews}
                     isOpen={isEditModalOpen}
                     isEditing={true}
                     onClose={() => setIsEditModalOpen(false)}
-                    onConfirm={handleUpdateNews}
-                    onInputChange={(e, field) => handleInputChange(e, field, true)}
+                    onInputChange={handleInputChange}
                     mainCategories={mainCategories}
                     subcategories={subcategories}
                 />
