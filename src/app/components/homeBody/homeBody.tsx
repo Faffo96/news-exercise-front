@@ -80,7 +80,7 @@ const HomeBody = () => {
             <h1 className="mb-5 color6">News Articles</h1>
 
             {/* Filters */}
-            <div className="d-flex align-items-center mb-4">
+            <div className="d-flex flex-column flex-lg-row align-items-start align-items-lg-center mb-4">
                 {/* Filter by status */}
                 <div className="mb-4 me-4">
                     <label htmlFor="filter" className="fw-bold fs-3 color6">Filter News:</label>
@@ -146,7 +146,7 @@ const HomeBody = () => {
 
             {/* News List */}
             {newsStatus === "succeeded" && (
-                <ul className="row align-items-center row-cols-3 gap-3">
+                <ul className="row align-items-center gap-3">
                     {filteredNews.map((news) => (
                         <li className="card mb-3 bg-color2 border border-2 border-green rounded-2" key={news.id}>
                             <h2 className="color4 mb-4"><span className="fw-bold color6">Title: </span>{news.title}</h2>
