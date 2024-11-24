@@ -1,29 +1,31 @@
-import "./newsModal.css";
 import { useState, useEffect } from "react";
 import { News } from "@/app/model/News.interface";
 import { Subcategory } from "@/app/model/Subcategory.interface";
+import { myHttpService } from "@/app/lib/httpService";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/app/redux/store";
+import { fetchNews } from "@/app/redux/newsSlice";
 
-interface NewsModalProps {
+interface UpdateNewsModalProps {
     news: News;
     isOpen: boolean;
     onClose: () => void;
-    onConfirm: (news: News) => void;
     isEditing: boolean;
     onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: string) => void;
     mainCategories: string[];
     subcategories: Subcategory[];
 }
 
-const NewsModal: React.FC<NewsModalProps> = ({
+const UpdateNewsModal: React.FC<UpdateNewsModalProps> = ({
     news,
     isOpen,
     onClose,
-    onConfirm,
     isEditing,
     onInputChange,
     mainCategories,
     subcategories
 }) => {
+    const dispatch = useDispatch<AppDispatch>();
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const [selectedMainCategory, setSelectedMainCategory] = useState<string>("");
     const [selectedSubcategories, setSelectedSubcategories] = useState<number[]>([]);
@@ -32,14 +34,11 @@ const NewsModal: React.FC<NewsModalProps> = ({
     useEffect(() => {
         if (isOpen) {
             setErrors({});
-
-            // Popola i campi in base ai dati della news
             if (isEditing) {
-                setSelectedMainCategory(news.mainCategory || ""); // Categoria principale
-                setSelectedSubcategories(news.subcategoriesList?.map((sub) => sub.id!) || []); // ID sottocategorie
-                setSelectedOtherCategories(news.otherCategoriesList || []); // Altre categorie
+                setSelectedMainCategory(news.mainCategory || "");
+                setSelectedSubcategories(news.subcategoriesList?.map((sub) => sub.id!) || []);
+                setSelectedOtherCategories(news.otherCategoriesList || []);
             } else {
-                // Reset campi se è una creazione
                 setSelectedMainCategory("");
                 setSelectedSubcategories([]);
                 setSelectedOtherCategories([]);
@@ -51,39 +50,35 @@ const NewsModal: React.FC<NewsModalProps> = ({
         const selectedCategory = e.target.value;
         setSelectedMainCategory(selectedCategory);
 
-        // Update selected other categories
-        setSelectedOtherCategories((prevState) => {
-            const filteredCategories = prevState.filter(
-                (category) => category !== selectedMainCategory
-            );
-            return selectedCategory
-                ? [...filteredCategories, selectedCategory]
-                : filteredCategories;
-        });
+        // Svuotare le subcategorie quando la mainCategory cambia
+        setSelectedSubcategories([]); // Resetta le sottocategorie selezionate
 
-        setSelectedSubcategories([]);
+        setSelectedOtherCategories((prevState) => {
+            const filteredCategories = prevState.filter((category) => category !== selectedMainCategory);
+            return selectedCategory ? [...filteredCategories, selectedCategory] : filteredCategories;
+        });
     };
 
     const handleOtherCategoriesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const category = e.target.value;
-        setSelectedOtherCategories(prevState =>
+        setSelectedOtherCategories((prevState) =>
             e.target.checked
                 ? [...prevState, category]
-                : prevState.filter(cat => cat !== category)
+                : prevState.filter((cat) => cat !== category)
         );
     };
 
     const handleSubcategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const subcategoryId = parseInt(e.target.value);
-        setSelectedSubcategories(prevState =>
+        setSelectedSubcategories((prevState) =>
             e.target.checked
                 ? [...prevState, subcategoryId]
-                : prevState.filter(id => id !== subcategoryId)
+                : prevState.filter((id) => id !== subcategoryId)
         );
     };
 
-    const filteredSubcategories = subcategories.filter(subcategory =>
-        subcategory.mainCategory === selectedMainCategory
+    const filteredSubcategories = subcategories.filter(
+        (subcategory) => subcategory.mainCategory === selectedMainCategory
     );
 
     const validateField = (value: string, field: string) => {
@@ -115,24 +110,57 @@ const NewsModal: React.FC<NewsModalProps> = ({
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: string) => {
         const { value } = e.target;
         const errorMessage = validateField(value, field);
-
-        setErrors(prevErrors => ({
+    
+        setErrors((prevErrors) => ({
             ...prevErrors,
-            [field]: errorMessage
+            [field]: errorMessage,
         }));
-
+    
         onInputChange(e, field);
     };
+    
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
+        // Prepare updated news object
         const updatedNews: News = {
             ...news,
-            title: selectedMainCategory,
-            body: selectedSubcategories.join(', '),
-            // Altri campi da gestire come titolo, autore, ecc.
+            mainCategory: selectedMainCategory,
+            otherCategoriesList: selectedOtherCategories,
+            subcategoriesList: selectedSubcategories.map((id) => ({ id })), // Assuming you need to map subcategory ids
+            title: news.title, // Keep the existing title and other fields, adjust as needed
+            body: news.body,
+            author: news.author,
+            archiveDate: news.archiveDate,
         };
-        onConfirm(updatedNews);
+
+        try {
+            // Send PUT request to the API
+            const response = await myHttpService.put(`/api/news/${news.id}`, updatedNews);
+
+            if (response.status !== 200) {
+                // If response is not OK (status 200)
+                throw new Error("Failed to update news.");
+            }
+
+            // Assuming `response.data` contains the updated news data
+            const updatedNewsData = response.data; // If using axios
+
+            console.log("News updated:", updatedNewsData);
+
+            // Close modal after update
+            onClose();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (error: any) {
+            console.error("Error updating news:", error);
+            setErrors((prevErrors) => ({
+                ...prevErrors,
+                submit: error?.message || "Error updating news. Please try again later.",
+            }));
+        } finally {
+            dispatch(fetchNews());
+        }
     };
+
 
     if (!isOpen) return null;
 
@@ -143,7 +171,9 @@ const NewsModal: React.FC<NewsModalProps> = ({
 
                 <form className="color6">
                     <div className="d-flex flex-column">
-                        <label className="fw-bold mb-2" htmlFor="title">Title</label>
+                        <label className="fw-bold mb-2" htmlFor="title">
+                            Title
+                        </label>
                         <input
                             className="border-green rounded-2 p-2"
                             type="text"
@@ -156,7 +186,9 @@ const NewsModal: React.FC<NewsModalProps> = ({
                     </div>
 
                     <div className="d-flex flex-column">
-                        <label className="fw-bold mb-2" htmlFor="body">Body</label>
+                        <label className="fw-bold mb-2" htmlFor="body">
+                            Body
+                        </label>
                         <textarea
                             className="border-green rounded-2 p-2"
                             id="body"
@@ -168,7 +200,9 @@ const NewsModal: React.FC<NewsModalProps> = ({
                     </div>
 
                     <div className="d-flex flex-column">
-                        <label className="fw-bold mb-2" htmlFor="author">Author</label>
+                        <label className="fw-bold mb-2" htmlFor="author">
+                            Author
+                        </label>
                         <input
                             className="border-green rounded-2 p-2"
                             type="text"
@@ -181,7 +215,9 @@ const NewsModal: React.FC<NewsModalProps> = ({
                     </div>
 
                     <div className="d-flex flex-column">
-                        <label className="fw-bold mb-2" htmlFor="archiveDate">Archive Date</label>
+                        <label className="fw-bold mb-2" htmlFor="archiveDate">
+                            Archive Date
+                        </label>
                         <input
                             className="border-green rounded-2 p-2"
                             type="date"
@@ -192,14 +228,14 @@ const NewsModal: React.FC<NewsModalProps> = ({
                         {errors.archiveDate && <span className="fw-bold text-danger mb-2">{errors.archiveDate}</span>}
                     </div>
 
-                    <div className="d-flex flex-column mb-2">
-                        <label className="fw-bold mb-2" htmlFor="mainCategory">Main Category</label>
+                    <div className="d-flex flex-column">
+                        <label className="fw-bold mb-2">Main Category</label>
                         <select
+                            id="mainCategory"
                             value={selectedMainCategory}
                             onChange={handleMainCategoryChange}
-                            className="form-select"
+                            className="border-green rounded-2 p-2"
                         >
-                            <option value="">Select a Main Category</option>
                             {mainCategories.map((category) => (
                                 <option key={category} value={category}>
                                     {category}
@@ -208,21 +244,24 @@ const NewsModal: React.FC<NewsModalProps> = ({
                         </select>
                     </div>
 
-                    <div className="d-flex flex-column mb-4">
+                    <div className="d-flex flex-column">
                         <label className="fw-bold mb-2">Other Categories</label>
-                        {mainCategories.map((category) => (
-                            <div key={category}>
-                                <input
-                                    className="w-25"
-                                    type="checkbox"
-                                    id={`other-category-${category}`}
-                                    onChange={handleOtherCategoriesChange}
-                                />
-                                <label htmlFor={`other-category-${category}`} className="ml-2">
-                                    {category}
-                                </label>
-                            </div>
-                        ))}
+                        {mainCategories
+                            .filter((category) => category !== selectedMainCategory)
+                            .map((category) => (
+                                <div key={category}>
+                                    <input
+                                        className="w-25"
+                                        type="checkbox"
+                                        id={category}
+                                        value={category}
+                                        checked={selectedOtherCategories.includes(category)}
+                                        onChange={handleOtherCategoriesChange}
+                                        disabled={category === selectedMainCategory}
+                                    />
+                                    <label htmlFor={category}>{category}</label>
+                                </div>
+                            ))}
                     </div>
 
                     <div className="d-flex flex-column">
@@ -233,34 +272,26 @@ const NewsModal: React.FC<NewsModalProps> = ({
                                     className="w-25"
                                     type="checkbox"
                                     value={sub.id}
+                                    checked={selectedSubcategories.includes(sub.id!)}
                                     onChange={handleSubcategoryChange}
                                 />
-                                <label className="ml-2">{sub.subcategory}</label>
+                                <label>{sub.subcategory}</label>
                             </div>
                         ))}
                     </div>
-
-                    <div className="d-flex justify-content-between mt-4">
-                        <button
-                            type="button"
-                            className="btn btn-outline-secondary"
-                            onClick={onClose}
-                        >
-                            Close
-                        </button>
-                        <button
-                            type="button"
-                            className="btn btn-primary"
-                            onClick={handleConfirm}
-                            disabled={Object.values(errors).some(Boolean)}
-                        >
-                            Confirm
-                        </button>
-                    </div>
                 </form>
+
+                <div className="mt-3 d-flex justify-content-between">
+                    <button className="btn text-light grey-btn-modale hover-bright--10 me-2" onClick={onClose}>
+                        Close
+                    </button>
+                    <button className="btn text-light green-btn-modale hover-bright20" onClick={handleConfirm}>
+                        Confirm
+                    </button>
+                </div>
             </div>
         </div>
     );
 };
 
-export default NewsModal;
+export default UpdateNewsModal;

@@ -91,12 +91,18 @@ const newsSlice = createSlice({
             })
             .addCase(updateNews.fulfilled, (state, action) => {
                 state.status = 'succeeded';
-                const index = state.newsList.findIndex(news => news.id === action.payload.id);
-                if (index !== -1) {
-                    state.newsList[index] = action.payload;
-                    state.filteredNews[index] = action.payload; // Aggiorna anche nella lista filtrata
-                }
+            
+                // Update newsList with a new reference
+                state.newsList = state.newsList.map(news =>
+                    news.id === action.payload.id ? action.payload : news
+                );
+            
+                // Update filteredNews with a new reference, in case it's being used for filtered display
+                state.filteredNews = state.filteredNews.map(news =>
+                    news.id === action.payload.id ? action.payload : news
+                );
             })
+            
             .addCase(updateNews.rejected, (state, action) => {
                 state.status = 'failed';
                 state.error = action.error.message || 'Something went wrong';
