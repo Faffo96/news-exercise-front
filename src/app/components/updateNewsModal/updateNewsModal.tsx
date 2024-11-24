@@ -84,41 +84,7 @@ const UpdateNewsModal: React.FC<UpdateNewsModalProps> = ({
         (subcategory) => subcategory.mainCategory === selectedMainCategory
     );
 
-    const validateField = (value: string, field: string) => {
-        let errorMessage = "";
-
-        switch (field) {
-            case "title":
-                if (!value) errorMessage = "Title cannot be null.";
-                else if (value.length > 150) errorMessage = "Title cannot exceed 150 chars.";
-                else if (/\d/.test(value)) errorMessage = "Title cannot contain numbers.";
-                break;
-            case "body":
-                if (!value) errorMessage = "Body cannot be null.";
-                else if (value.length < 80) errorMessage = "Body must have at least 80 characters.";
-                break;
-            case "author":
-                if (!value) errorMessage = "Author cannot be null.";
-                break;
-            case "archiveDate":
-                if (!value) errorMessage = "Archive Date cannot be null.";
-                break;
-            default:
-                break;
-        }
-
-        return errorMessage;
-    };
-
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: string) => {
-        const { value } = e.target;
-        const errorMessage = validateField(value, field);
-    
-        setErrors((prevErrors) => ({
-            ...prevErrors,
-            [field]: errorMessage,
-        }));
-    
         onInputChange(e, field);
     };
     
