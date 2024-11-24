@@ -6,6 +6,7 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/app/redux/store";
 import { fetchNews } from "@/app/redux/newsSlice";
 import OverlaySpinner from "../overlaySpinner/overlaySpinner";
+import { showToast } from "@/app/lib/showToast";
 
 interface UpdateNewsModalProps {
     news: News;
@@ -147,12 +148,14 @@ const UpdateNewsModal: React.FC<UpdateNewsModalProps> = ({
 
             const updatedNewsData = response.data;
 
+            showToast("success", "News updating successfully!")
             console.log("News updated:", updatedNewsData);
 
             // Close modal after update
             onClose();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
+            showToast("error", "Error updating news:" + error.response.data.message)
             console.error("Error updating news:", error);
             setErrors((prevErrors) => ({
                 ...prevErrors,

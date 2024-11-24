@@ -7,6 +7,7 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/app/redux/store";
 import { fetchNews } from "@/app/redux/newsSlice";
 import OverlaySpinner from "../overlaySpinner/overlaySpinner";
+import { showToast } from "@/app/lib/showToast";
 
 interface CreateNewsModalProps {
     isOpen: boolean;
@@ -151,11 +152,13 @@ const CreateNewsModal: React.FC<CreateNewsModalProps> = ({
                 throw new Error("Failed to create news.");
             }
 
+            showToast("success", "News created successfully!")
             console.log("News created:", response.data);
 
             onClose();
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
+            showToast("error", "Error creating news:" + error.response.data.message)
             console.error("Error creating news:", error);
             setErrors((prevErrors) => ({
                 ...prevErrors,
