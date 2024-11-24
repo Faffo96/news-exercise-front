@@ -15,9 +15,8 @@
     padding: 20px;
     border-radius: 5px;
     width: 400px;
-    max-height: 999px;
+    max-height: 800px;
     overflow-y: auto;
-
 }
 
 .modal-content input,
