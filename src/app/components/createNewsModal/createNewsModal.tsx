@@ -149,7 +149,6 @@ const CreateNewsModal: React.FC<CreateNewsModalProps> = ({
 
             console.log("News created:", response.data);
 
-            // Close modal after creation
             onClose();
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
