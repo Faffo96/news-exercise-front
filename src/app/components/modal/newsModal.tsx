@@ -2,8 +2,6 @@ import "./newsModal.css";
 import { useState, useEffect } from "react";
 import { News } from "@/app/model/News.interface";
 import { Subcategory } from "@/app/model/Subcategory.interface";
-import { useDispatch } from "react-redux";
-import { setMainCategory, setOtherCategoriesList, setSubcategoriesList } from '@/app/redux/newsSlice';
 
 interface NewsModalProps {
     news: News;
@@ -30,21 +28,29 @@ const NewsModal: React.FC<NewsModalProps> = ({
     const [selectedMainCategory, setSelectedMainCategory] = useState<string>("");
     const [selectedSubcategories, setSelectedSubcategories] = useState<number[]>([]);
     const [selectedOtherCategories, setSelectedOtherCategories] = useState<string[]>([]);
-    const dispatch = useDispatch();
 
     useEffect(() => {
         if (isOpen) {
             setErrors({});
-            setSelectedMainCategory("");
-            setSelectedSubcategories([]);
-            setSelectedOtherCategories([]);
+
+            // Popola i campi in base ai dati della news
+            if (isEditing) {
+                setSelectedMainCategory(news.mainCategory || ""); // Categoria principale
+                setSelectedSubcategories(news.subcategoriesList?.map((sub) => sub.id!) || []); // ID sottocategorie
+                setSelectedOtherCategories(news.otherCategoriesList || []); // Altre categorie
+            } else {
+                // Reset campi se è una creazione
+                setSelectedMainCategory("");
+                setSelectedSubcategories([]);
+                setSelectedOtherCategories([]);
+            }
         }
-    }, [isOpen]);
+    }, [isOpen, isEditing, news]);
 
     const handleMainCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedCategory = e.target.value;
         setSelectedMainCategory(selectedCategory);
-        
+
         // Update selected other categories
         setSelectedOtherCategories((prevState) => {
             const filteredCategories = prevState.filter(
@@ -56,27 +62,8 @@ const NewsModal: React.FC<NewsModalProps> = ({
         });
 
         setSelectedSubcategories([]);
-        
-        // Dispatch to Redux state
-        dispatch(setMainCategory(selectedCategory));
     };
-    
-    const handleSubcategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const subcategoryId = parseInt(e.target.value);
-        setSelectedSubcategories(prevState =>
-            e.target.checked
-                ? [...prevState, subcategoryId]
-                : prevState.filter(id => id !== subcategoryId)
-        );
-    
-        // Dispatch to update Redux state
-        const selectedSubcategoryList = subcategories.filter(subcategory =>
-            selectedSubcategories.includes(subcategory.id!)
-        );
-                
-        dispatch(setSubcategoriesList(selectedSubcategoryList));
-    };
-    
+
     const handleOtherCategoriesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const category = e.target.value;
         setSelectedOtherCategories(prevState =>
@@ -84,9 +71,15 @@ const NewsModal: React.FC<NewsModalProps> = ({
                 ? [...prevState, category]
                 : prevState.filter(cat => cat !== category)
         );
-    
-        // Dispatch to update Redux state
-        dispatch(setOtherCategoriesList(selectedOtherCategories));
+    };
+
+    const handleSubcategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const subcategoryId = parseInt(e.target.value);
+        setSelectedSubcategories(prevState =>
+            e.target.checked
+                ? [...prevState, subcategoryId]
+                : prevState.filter(id => id !== subcategoryId)
+        );
     };
 
     const filteredSubcategories = subcategories.filter(subcategory =>
@@ -131,6 +124,16 @@ const NewsModal: React.FC<NewsModalProps> = ({
         onInputChange(e, field);
     };
 
+    const handleConfirm = () => {
+        const updatedNews: News = {
+            ...news,
+            title: selectedMainCategory,
+            body: selectedSubcategories.join(', '),
+            // Altri campi da gestire come titolo, autore, ecc.
+        };
+        onConfirm(updatedNews);
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -139,7 +142,6 @@ const NewsModal: React.FC<NewsModalProps> = ({
                 <h2 className="color6 mb-4">{isEditing ? "Edit News" : "Create News"}</h2>
 
                 <form className="color6">
-                    {/* Input per il titolo */}
                     <div className="d-flex flex-column">
                         <label className="fw-bold mb-2" htmlFor="title">Title</label>
                         <input
@@ -153,7 +155,6 @@ const NewsModal: React.FC<NewsModalProps> = ({
                         {errors.title && <span className="fw-bold text-danger mb-2">{errors.title}</span>}
                     </div>
 
-                    {/* Input per il corpo */}
                     <div className="d-flex flex-column">
                         <label className="fw-bold mb-2" htmlFor="body">Body</label>
                         <textarea
@@ -166,7 +167,6 @@ const NewsModal: React.FC<NewsModalProps> = ({
                         {errors.body && <span className="fw-bold text-danger mb-2">{errors.body}</span>}
                     </div>
 
-                    {/* Input per l'autore */}
                     <div className="d-flex flex-column">
                         <label className="fw-bold mb-2" htmlFor="author">Author</label>
                         <input
@@ -180,7 +180,6 @@ const NewsModal: React.FC<NewsModalProps> = ({
                         {errors.author && <span className="fw-bold text-danger mb-2">{errors.author}</span>}
                     </div>
 
-                    {/* Input per la data di archivio */}
                     <div className="d-flex flex-column">
                         <label className="fw-bold mb-2" htmlFor="archiveDate">Archive Date</label>
                         <input
@@ -193,7 +192,6 @@ const NewsModal: React.FC<NewsModalProps> = ({
                         {errors.archiveDate && <span className="fw-bold text-danger mb-2">{errors.archiveDate}</span>}
                     </div>
 
-                    {/* Categoria principale */}
                     <div className="d-flex flex-column mb-2">
                         <label className="fw-bold mb-2" htmlFor="mainCategory">Main Category</label>
                         <select
@@ -210,54 +208,53 @@ const NewsModal: React.FC<NewsModalProps> = ({
                         </select>
                     </div>
 
-                    {/* Checkbox per altre categorie */}
                     <div className="d-flex flex-column mb-4">
                         <label className="fw-bold mb-2">Other Categories</label>
                         {mainCategories.map((category) => (
                             <div key={category}>
                                 <input
+                                    className="w-25"
                                     type="checkbox"
                                     id={`other-category-${category}`}
-                                    value={category}
-                                    checked={selectedOtherCategories.includes(category)}
-                                    disabled={selectedMainCategory === category}
                                     onChange={handleOtherCategoriesChange}
                                 />
-                                <label htmlFor={`other-category-${category}`}>{category}</label>
+                                <label htmlFor={`other-category-${category}`} className="ml-2">
+                                    {category}
+                                </label>
                             </div>
                         ))}
                     </div>
 
-                    {/* Sottocategorie */}
-                    {selectedMainCategory && (
-                        <div className="d-flex flex-column mb-4">
-                            <label className="fw-bold mb-2">Subcategories</label>
-                            {filteredSubcategories.map((subcategory) => (
-                                <div key={subcategory.id}>
-                                    <input
-                                        type="checkbox"
-                                        id={`subcategory-${subcategory.id}`}
-                                        value={subcategory.id}
-                                        checked={selectedSubcategories.includes(subcategory.id!)}
-                                        onChange={handleSubcategoryChange}
-                                    />
-                                    <label htmlFor={`subcategory-${subcategory.id}`}>{subcategory.subcategory}</label>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                    <div className="d-flex flex-column">
+                        <label className="fw-bold mb-2">Subcategories</label>
+                        {filteredSubcategories.map((sub) => (
+                            <div key={sub.id}>
+                                <input
+                                    className="w-25"
+                                    type="checkbox"
+                                    value={sub.id}
+                                    onChange={handleSubcategoryChange}
+                                />
+                                <label className="ml-2">{sub.subcategory}</label>
+                            </div>
+                        ))}
+                    </div>
 
-                    {/* Action buttons */}
-                    <div className="d-flex justify-content-between">
-                        <button type="button" className="btn btn-secondary" onClick={onClose}>
+                    <div className="d-flex justify-content-between mt-4">
+                        <button
+                            type="button"
+                            className="btn btn-outline-secondary"
+                            onClick={onClose}
+                        >
                             Close
                         </button>
                         <button
                             type="button"
                             className="btn btn-primary"
-                            onClick={() => onConfirm(news)}
+                            onClick={handleConfirm}
+                            disabled={Object.values(errors).some(Boolean)}
                         >
-                            {isEditing ? "Update" : "Create"}
+                            Confirm
                         </button>
                     </div>
                 </form>

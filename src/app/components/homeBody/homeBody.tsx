@@ -1,142 +1,88 @@
 "use client";
 
 import "./homeBody.css";
-import { myHttpService } from "@/app/lib/httpService";
-import { showToast } from "@/app/lib/showToast";
-import { News } from "@/app/model/News.interface";
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import OverlaySpinner from "../overlaySpinner/overlaySpinner";
 import NewsModal from "../modal/newsModal";
+import { News } from "@/app/model/News.interface";
 import { Subcategory } from "@/app/model/Subcategory.interface";
-import { useSelector } from "react-redux";
-import { RootState } from "@/app/redux/store";
+import { AppDispatch, RootState } from "@/app/redux/store";
+import { createNews, fetchNews, updateNews } from "@/app/redux/newsSlice";
+import { fetchSubcategories } from "@/app/redux/subcategoriesSlice";
+import { fetchMainCategories } from "@/app/redux/mainCategoriesSlice";
 
 const HomeBody = () => {
-    const [newsList, setNewsList] = useState<News[]>([]);
+    const dispatch = useDispatch<AppDispatch>();
+
+    const { newsList, status: newsStatus } = useSelector((state: RootState) => state.news);
+    const { subcategories, loading: subcategoriesLoading } = useSelector(
+        (state: RootState) => state.subcategories
+    );
+    
+    const { mainCategories, status: mainCategoriesStatus } = useSelector(
+        (state: RootState) => state.mainCategories
+    );
+
+    // Local state
     const [filteredNews, setFilteredNews] = useState<News[]>([]);
-    const [loading, setLoading] = useState<boolean>(false);
     const [filterOption, setFilterOption] = useState<string>("all");
-    const [newNews, setNewNews] = useState<News>({ title: '', body: '', author: '', archiveDate: '', releaseDate: '', mainCategory: '', otherCategoriesList: [], subcategoriesList: [] });
+    const [mainCategoryFilter, setMainCategoryFilter] = useState<string>("all");
+    const [subcategoryFilter, setSubcategoryFilter] = useState<string>("all");
+    const [newNews, setNewNews] = useState<News>({ title: "", body: "", author: "", archiveDate: "", releaseDate: "", mainCategory: "", otherCategoriesList: [], subcategoriesList: [] });
     const [editingNews, setEditingNews] = useState<News | null>(null);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
-    const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
-    const [mainCategories, setMainCategories] = useState<string[]>([]);
-    const [mainCategoryFilter, setMainCategoryFilter] = useState<string>("all");
-    const [subcategoryFilter, setSubcategoryFilter] = useState<string>("all");
-    const mainCategoryPOST = useSelector((state: RootState) => state.news.mainCategory);
-    const mainCategoriesPOST = useSelector((state: RootState) => state.news.otherCategoriesList);
-    const subcategoriesPOST = useSelector((state: RootState) => state.news.subcategoriesList);
 
+    // Fetch data on component mount
     useEffect(() => {
+        dispatch(fetchNews());
+        dispatch(fetchSubcategories("id"));
+        dispatch(fetchMainCategories());  // Aggiungi questo per caricare le mainCategories
+    }, [dispatch]);
 
-        fetchSubcategories();
-
-    }, []);
-
-    const fetchSubcategories = async () => {
-        try {
-            const response = await myHttpService.get('/api/subcategories');
-            const data: Subcategory[] = response.data;
-            setSubcategories(data);
-            console.log("data: ", data);
-
-            const uniqueMainCategories = Array.from(
-                new Set(data.map(sub => sub.mainCategory).filter((main): main is string => main !== undefined))
-            );
-
-            setMainCategories(uniqueMainCategories);
-        } catch (error) {
-            console.error("Error fetching subcategories:", error);
-        }
-    };
-
-
-    const fetchNews = async () => {
-        setLoading(true);
-        try {
-            const url = '/api/news';
-            const response = await myHttpService.get(url);
-            setNewsList(response.data);
-            setFilteredNews(response.data);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (error: any) {
-            showToast("error", 'Error fetching news:' + error?.response?.data?.message);
-            console.error('Error fetching news:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchNews();
-    }, []);
-
+    // Filter news whenever filters or news list changes
     useEffect(() => {
         const filterNews = () => {
             let filtered = newsList;
 
             if (filterOption === "active") {
-                filtered = filtered.filter(news => new Date(news.releaseDate) < new Date(news.archiveDate));
+                filtered = filtered.filter((news: News) => new Date(news.releaseDate) < new Date(news.archiveDate));
             } else if (filterOption === "archived") {
-                filtered = filtered.filter(news => new Date(news.releaseDate) > new Date(news.archiveDate));
+                filtered = filtered.filter((news: News) => new Date(news.releaseDate) > new Date(news.archiveDate));
             }
             if (mainCategoryFilter !== "all") {
-                filtered = filtered.filter(news => news.mainCategory === mainCategoryFilter);
+                filtered = filtered.filter((news: News) => news.mainCategory === mainCategoryFilter);
             }
             if (subcategoryFilter !== "all") {
-                filtered = filtered.filter(news =>
+                filtered = filtered.filter((news: News) =>
                     news.subcategoriesList.some(subcategory => subcategory.subcategory === subcategoryFilter)
                 );
             }
-
 
             setFilteredNews(filtered);
         };
 
         filterNews();
-    }, [filterOption, newsList, mainCategoryFilter, subcategoryFilter]);
+    }, [filterOption, mainCategoryFilter, subcategoryFilter, newsList]);
 
-
-
+    // Handle creating a new news
     const handleCreateNews = async () => {
-        setLoading(true);
-        try {
-            newNews.otherCategoriesList = mainCategoriesPOST;
-            newNews.mainCategory = mainCategoryPOST;
-            newNews.subcategoriesList = subcategoriesPOST;
-            const response = await myHttpService.post('/api/news', newNews);
-            setNewsList([...newsList, response.data]);
-            showToast("success", "News created successfully.");
-            setNewNews({ title: '', body: '', author: '', archiveDate: '', releaseDate: '', mainCategory: '', otherCategoriesList: [], subcategoriesList: [] });
-            setIsCreateModalOpen(false);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (error: any) {
-            showToast("error", 'Error creating news:' + error?.response?.data?.message);
-            console.error('Error creating news:', error);
-        } finally {
-            setLoading(false);
-        }
+        dispatch(createNews(newNews));
+        setNewNews({ title: "", body: "", author: "", archiveDate: "", releaseDate: "", mainCategory: "", otherCategoriesList: [], subcategoriesList: [] });
+        setIsCreateModalOpen(false);
     };
 
+    // Handle updating an existing news
     const handleUpdateNews = async () => {
         if (!editingNews) return;
-        setLoading(true);
-        try {
-            const response = await myHttpService.put(`/api/news/${editingNews.id}`, editingNews);
-            setNewsList(newsList.map(news => (news.id === editingNews.id ? response.data : news)));
-            showToast("success", "News updated successfully.");
-            setIsEditModalOpen(false);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (error: any) {
-            showToast("error", 'Error updating news:' + error?.response?.data);
-            console.error('Error updating news:', error);
-        } finally {
-            setLoading(false);
-        }
+
+        dispatch(updateNews(editingNews));
+        setIsEditModalOpen(false);
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: string, isEditing: boolean) => {
+    // Handle input changes for news creation/editing
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>, field: string, isEditing: boolean) => {
         if (isEditing && editingNews) {
             setEditingNews({ ...editingNews, [field]: e.target.value });
         } else {
@@ -148,8 +94,9 @@ const HomeBody = () => {
         <div className="container">
             <h1 className="mb-5 color6">News Articles</h1>
 
-            {/* Filtro tramite Select */}
+            {/* Filters */}
             <div className="d-flex align-items-center mb-4">
+                {/* Filter by status */}
                 <div className="mb-4 me-4">
                     <label htmlFor="filter" className="fw-bold fs-3 color6">Filter News:</label>
                     <select
@@ -164,7 +111,7 @@ const HomeBody = () => {
                     </select>
                 </div>
 
-                {/* Filtro per mainCategory */}
+                {/* Filter by main category */}
                 <div className="mb-4 me-4">
                     <label htmlFor="mainCategory" className="fw-bold fs-3 color6">Main Category:</label>
                     <select
@@ -174,13 +121,18 @@ const HomeBody = () => {
                         onChange={(e) => setMainCategoryFilter(e.target.value)}
                     >
                         <option value="all">All</option>
-                        {mainCategories.map((category) => (
-                            <option key={category} value={category}>{category}</option>
-                        ))}
+                        {mainCategoriesStatus === 'succeeded' ? (
+                            mainCategories.map((category) => (
+                                <option key={category} value={category}>{category}</option>
+                            ))
+                        ) : (
+                            <option>Loading...</option>
+                        )}
                     </select>
                 </div>
 
-                {/* Filtro per subcategory */}
+
+                {/* Filter by subcategory */}
                 <div className="mb-4">
                     <label htmlFor="subcategory" className="fw-bold fs-3 color6">Subcategory:</label>
                     <select
@@ -190,21 +142,21 @@ const HomeBody = () => {
                         onChange={(e) => setSubcategoryFilter(e.target.value)}
                     >
                         <option value="all">All</option>
-                        {subcategories.map((subcategory) => (
+                        {subcategories.map((subcategory: Subcategory) => (
                             <option key={subcategory.id} value={subcategory.subcategory}>
                                 {subcategory.subcategory}
                             </option>
                         ))}
-                    </select>
 
+                    </select>
                 </div>
             </div>
 
             {/* Loading Spinner */}
-            {loading && <OverlaySpinner />}
+            {(subcategoriesLoading) && <OverlaySpinner />}
 
             {/* News List */}
-            {!loading && (
+            {newsStatus === "succeeded" && (
                 <ul className="row align-items-center row-cols-3 gap-3">
                     {filteredNews.map((news) => (
                         <li className="card mb-3 bg-color2 border border-2 border-green rounded-2" key={news.id}>
@@ -213,22 +165,20 @@ const HomeBody = () => {
                             <p className="color4"><span className="fw-bold color6">Categories: </span>{news.mainCategory}</p>
                             <p className="color4">
                                 <span className="fw-bold color6">Other categories: </span>
-                                {Array.isArray(news.otherCategoriesList) ? news.otherCategoriesList.join(', ') : 'No categories available'}
+                                {Array.isArray(news.otherCategoriesList) ? news.otherCategoriesList.join(", ") : "No categories available"}
                             </p>
                             <p className="color4">
                                 <span className="fw-bold color6">Subcategories: </span>
-                                {Array.isArray(news.subcategoriesList) && news.subcategoriesList.length > 0 ? (
+                                {news.subcategoriesList.length > 0 ? (
                                     news.subcategoriesList.map((subcategory, index) => (
                                         <span key={index}>
-                                            {subcategory.subcategory}{index < news.subcategoriesList.length - 1 ? ', ' : ''}
+                                            {subcategory.subcategory}{index < news.subcategoriesList.length - 1 ? ", " : ""}
                                         </span>
                                     ))
                                 ) : (
-                                    'No subcategories available'
+                                    "No subcategories available"
                                 )}
                             </p>
-
-
                             <p className="color4"><span className="fw-bold color6">Body: </span>{news.body}</p>
                             <p className="color4"><span className="fw-bold color6">Release date: </span>{news.releaseDate}</p>
                             <p className="color4"><span className="fw-bold color6">Archive date: </span>{news.archiveDate}</p>
@@ -242,12 +192,6 @@ const HomeBody = () => {
                                 >
                                     Update
                                 </button>
-                                <button
-                                    className="border-0 hover-bright--10 rounded-2 mb-2 py-1 w-100 px-5 text-light bg-danger"
-                                    onClick={() => console.log('Delete functionality here')}
-                                >
-                                    Delete
-                                </button>
                             </div>
                         </li>
                     ))}
@@ -260,7 +204,7 @@ const HomeBody = () => {
                 </ul>
             )}
 
-            {/* NewsModal for Creating News */}
+            {/* Modals */}
             <NewsModal
                 news={newNews}
                 isOpen={isCreateModalOpen}
@@ -272,7 +216,6 @@ const HomeBody = () => {
                 subcategories={subcategories}
             />
 
-            {/* NewsModal for Editing News */}
             {editingNews && (
                 <NewsModal
                     news={editingNews}
