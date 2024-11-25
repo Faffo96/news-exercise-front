@@ -200,7 +200,7 @@ const UpdateNewsModal: React.FC<UpdateNewsModalProps> = ({
                         {errors.archiveDate && <span className="fw-bold text-danger mb-2">{errors.archiveDate}</span>}
                     </div>
 
-                    <div className="d-flex flex-column">
+                    <div className="d-flex flex-column mb-3">
                         <label className="fw-bold mb-2">Main Category</label>
                         <select
                             id="mainCategory"
@@ -216,7 +216,7 @@ const UpdateNewsModal: React.FC<UpdateNewsModalProps> = ({
                         </select>
                     </div>
 
-                    <div className="d-flex flex-column">
+                    <div className="d-flex flex-column mb-2">
                         <label className="fw-bold mb-2">Other Categories</label>
                         {mainCategories
                             .filter((category) => category !== selectedMainCategory)
@@ -253,11 +253,11 @@ const UpdateNewsModal: React.FC<UpdateNewsModalProps> = ({
                     </div>
                 </form>
 
-                <div className="mt-3 d-flex justify-content-between">
-                    <button className="btn text-light grey-btn-modale hover-bright--10 me-2" onClick={onClose}>
+                <div className="mt-3 d-flex justify-content-end">
+                    <button className="btn text-light grey-btn-modale hover-bright20 me-2" onClick={onClose}>
                         Close
                     </button>
-                    <button className="btn text-light green-btn-modale hover-bright20" onClick={handleConfirm}>
+                    <button className="btn text-light green-btn-modale hover-bright50" onClick={handleConfirm}>
                         Confirm
                     </button>
                 </div>

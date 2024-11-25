@@ -236,7 +236,7 @@ const CreateNewsModal: React.FC<CreateNewsModalProps> = ({
                         {errors.archiveDate && <span className="fw-bold text-danger mb-2">{errors.archiveDate}</span>}
                     </div>
 
-                    <div className="d-flex flex-column mb-2">
+                    <div className="d-flex flex-column mb-3">
                         <label className="fw-bold mb-2" htmlFor="mainCategory">
                             Main Category
                         </label>
@@ -254,12 +254,12 @@ const CreateNewsModal: React.FC<CreateNewsModalProps> = ({
                         </select>
                     </div>
 
-                    <div className="d-flex flex-column mb-4">
+                    <div className="d-flex flex-column mb-2">
                         <label className="fw-bold mb-2">Other Categories</label>
                         {mainCategories.map((category) => (
                             <div key={category}>
                                 <input
-                                    className="w-25"
+                                    className="w-auto mx-2"
                                     type="checkbox"
                                     id={category}
                                     value={category}
@@ -282,7 +282,7 @@ const CreateNewsModal: React.FC<CreateNewsModalProps> = ({
                                     <div key={subcategory.id}>
                                         <input
                                             checked={selectedSubcategories.includes(subcategory.id!)}
-                                            className="w-25"
+                                            className="w-auto mx-2"
                                             type="checkbox"
                                             value={subcategory.id}
                                             onChange={handleSubcategoryChange}
@@ -300,14 +300,14 @@ const CreateNewsModal: React.FC<CreateNewsModalProps> = ({
                     <div className="mt-3 text-end">
                         <button
                             type="button"
-                            className="btn text-light grey-btn-modale hover-bright--10 me-2"
+                            className="btn text-light grey-btn-modale me-2"
                             onClick={onClose}
                         >
                             Close
                         </button>
                         <button
                             type="button"
-                            className="btn text-light green-btn-modale hover-bright20"
+                            className="btn text-light green-btn-modale hover-bright50"
                             onClick={handleConfirm}
                             disabled={
                                 !news.title ||

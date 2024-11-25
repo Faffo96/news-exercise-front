@@ -55,5 +55,6 @@
         width: 500px;
         height: 353px;
         font-size: 10rem;
+        transform: translateY(-10px);
     }
 }

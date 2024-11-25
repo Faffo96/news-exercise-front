@@ -35,11 +35,20 @@
 
 .green-btn-modale {
     background-color: #087669!important;
+    border: 2px solid #087669!important;
 }
 
 .grey-btn-modale {
-    background-color: rgb(163, 163, 163)!important;
+    background-color: transparent!important;
+    color: #087669!important;
+    border: 2px solid #087669;
 
+}
+
+.grey-btn-modale:hover {
+    background-color: #087669!important;
+    color: white!important;
+    border: 2px solid #087669;
 }
 
 
