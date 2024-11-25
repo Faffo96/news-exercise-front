@@ -78,11 +78,10 @@ const HomeBody = () => {
     };
 
     const handleDeleteNews = async (newsId: string) => {
-        dispatch(deleteNews(newsId));
-        setTimeout(() => {
-            dispatch(fetchNews());
-        }, 500);
+        await dispatch(deleteNews(newsId));
+        dispatch(fetchNews());
     };
+    
 
     const handleDeleteClick = (newsId: string) => {
         setNewsIdToDelete(newsId);
