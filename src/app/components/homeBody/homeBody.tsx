@@ -81,7 +81,7 @@ const HomeBody = () => {
         dispatch(deleteNews(newsId));
         setTimeout(() => {
             dispatch(fetchNews());
-        }, 100);
+        }, 500);
     };
 
     const handleDeleteClick = (newsId: string) => {
