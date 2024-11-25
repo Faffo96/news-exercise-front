@@ -25,6 +25,10 @@
     margin-bottom: 10px;
 }
 
+.fade {
+z-index: -1;
+}
+
 .modal-checkbox {
     width: 30px!important;
 }

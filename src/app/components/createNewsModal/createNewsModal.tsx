@@ -8,6 +8,7 @@ import { AppDispatch } from "@/app/redux/store";
 import { fetchNews } from "@/app/redux/newsSlice";
 import OverlaySpinner from "../overlaySpinner/overlaySpinner";
 import { showToast } from "@/app/lib/showToast";
+import ConfirmationModal from "../confirmationModal/confirmationModal";
 
 interface CreateNewsModalProps {
     isOpen: boolean;
@@ -39,6 +40,8 @@ const CreateNewsModal: React.FC<CreateNewsModalProps> = ({
     const [selectedSubcategories, setSelectedSubcategories] = useState<number[]>([]);
     const [selectedOtherCategories, setSelectedOtherCategories] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
+    const [newsIdToCreate, setNewsIdToCreate] = useState<string | null>(null);
+
 
     useEffect(() => {
         if (isOpen) {
@@ -168,6 +171,14 @@ const CreateNewsModal: React.FC<CreateNewsModalProps> = ({
             setLoading(false);
             dispatch(fetchNews());
         }
+    };
+
+    const handleCreateClick = (newsId: string) => {
+        setNewsIdToCreate(newsId);
+    };
+
+    const closeModal = () => {
+        setNewsIdToCreate(null);
     };
 
     if (!isOpen) return null;
@@ -308,7 +319,7 @@ const CreateNewsModal: React.FC<CreateNewsModalProps> = ({
                         <button
                             type="button"
                             className="btn text-light green-btn-modale hover-bright50"
-                            onClick={handleConfirm}
+                            onClick={() => handleCreateClick(news.id!)}
                             disabled={
                                 !news.title ||
                                 !news.body ||
@@ -322,6 +333,15 @@ const CreateNewsModal: React.FC<CreateNewsModalProps> = ({
                     </div>
                 </form>
             </div>
+              {/* Modale di conferma */}
+              <ConfirmationModal
+                show={newsIdToCreate !== null}
+                title="Create news"
+                onHide={closeModal}
+                onConfirm={handleConfirm}
+                loading={loading}
+            />
+
             {loading && <OverlaySpinner />}
         </div>
     );

@@ -7,6 +7,7 @@ import { AppDispatch } from "@/app/redux/store";
 import { fetchNews } from "@/app/redux/newsSlice";
 import OverlaySpinner from "../overlaySpinner/overlaySpinner";
 import { showToast } from "@/app/lib/showToast";
+import ConfirmationModal from "../confirmationModal/confirmationModal";
 
 interface UpdateNewsModalProps {
     news: News;
@@ -33,6 +34,7 @@ const UpdateNewsModal: React.FC<UpdateNewsModalProps> = ({
     const [selectedSubcategories, setSelectedSubcategories] = useState<number[]>([]);
     const [selectedOtherCategories, setSelectedOtherCategories] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
+    const [newsIdToUpdate, setNewsIdToUpdate] = useState<string | null>(null);
 
 
     useEffect(() => {
@@ -131,6 +133,14 @@ const UpdateNewsModal: React.FC<UpdateNewsModalProps> = ({
             setLoading(false);
             dispatch(fetchNews());
         }
+    };
+
+    const handleUpdateClick = (newsId: string) => {
+        setNewsIdToUpdate(newsId);
+    };
+
+    const closeModal = () => {
+        setNewsIdToUpdate(null);
     };
 
 
@@ -257,11 +267,20 @@ const UpdateNewsModal: React.FC<UpdateNewsModalProps> = ({
                     <button className="btn text-light grey-btn-modale hover-bright20 me-2" onClick={onClose}>
                         Close
                     </button>
-                    <button className="btn text-light green-btn-modale hover-bright50" onClick={handleConfirm}>
+                    <button className="btn text-light green-btn-modale hover-bright50" onClick={() => handleUpdateClick(news.id!)}>
                         Confirm
                     </button>
                 </div>
             </div>
+             {/* Modale di conferma */}
+             <ConfirmationModal
+                show={newsIdToUpdate !== null}
+                title="Update news"
+                onHide={closeModal}
+                onConfirm={handleConfirm}
+                loading={loading}
+            />
+
             {loading && <OverlaySpinner />}
         </div>
     );
