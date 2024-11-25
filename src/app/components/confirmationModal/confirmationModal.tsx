@@ -42,12 +42,12 @@ export default function ConfirmationModal({
                         <p className=''>Are you sure you want proceed?</p>
                     </div>
                     <div className="modal-footer">
-                        <button type="button" className="bg-secondary hover-bright20 text-light p-2 border-0 rounded-2" onClick={onHide}>
+                        <button type="button" className="btn text-light grey-btn-modale hover-bright20 me-2" onClick={onHide}>
                         Close
                         </button>
                         <button
                             type="button"
-                            className="bg-color6 hover-bright20 text-light p-2 border-0 rounded-2"
+                            className="btn text-light green-btn-modale hover-bright50"
                             onClick={handleConfirm}
                             disabled={loading}
                         >

@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { myHttpService } from '@/app/lib/httpService';
 import { News } from '@/app/model/News.interface';
+import { showToast } from '../lib/showToast';
 
 export const fetchNews = createAsyncThunk('news/fetchNews', async () => {
     const response = await myHttpService.get('/api/news');
@@ -13,6 +14,11 @@ export const createNews = createAsyncThunk('news/createNews', async (news: News)
 
 export const updateNews = createAsyncThunk('news/updateNews', async (news: News) => {
     const response = await myHttpService.put(`/api/news/${news.id}`, news);
+    return response.data;
+});
+
+export const deleteNews = createAsyncThunk('news/deleteNews', async (news: string) => {
+    const response = await myHttpService.delete(`/api/news/${news}`);
     return response.data;
 });
 
@@ -111,11 +117,17 @@ const newsSlice = createSlice({
                     news.id === action.payload.id ? action.payload : news
                 );
             })
-            
             .addCase(updateNews.rejected, (state, action) => {
                 state.loading = false;
                 state.status = 'failed';
                 state.error = action.error.message || 'Something went wrong';
+            })
+            .addCase(deleteNews.fulfilled, (state, action) => {
+                showToast("success", "News deleted successfully.")
+                state.newsList = state.newsList.filter(news => news.id !== action.payload);
+            })
+            .addCase(deleteNews.rejected, (state) => {
+                state.status = "failed";
             });
     },
 });

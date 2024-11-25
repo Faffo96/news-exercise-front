@@ -7,11 +7,12 @@ import OverlaySpinner from "../overlaySpinner/overlaySpinner";
 import { News } from "@/app/model/News.interface";
 import { Subcategory } from "@/app/model/Subcategory.interface";
 import { AppDispatch, RootState } from "@/app/redux/store";
-import { fetchNews } from "@/app/redux/newsSlice";
+import { deleteNews, fetchNews } from "@/app/redux/newsSlice";
 import { fetchSubcategories } from "@/app/redux/subcategoriesSlice";
 import { fetchMainCategories } from "@/app/redux/mainCategoriesSlice";
 import UpdateNewsModal from "../updateNewsModal/updateNewsModal";
 import CreateNewsModal from "../createNewsModal/createNewsModal";
+import ConfirmationModal from "../confirmationModal/confirmationModal";
 
 const HomeBody = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -32,6 +33,7 @@ const HomeBody = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
     const [editingNews, setEditingNews] = useState<News | null>(null);
+    const [newsIdToDelete, setNewsIdToDelete] = useState<string | null>(null);
 
 
     const handleEditNews = (news: News) => {
@@ -73,6 +75,21 @@ const HomeBody = () => {
         if (editingNews) {
             setEditingNews({ ...editingNews, [field]: e.target.value });
         }
+    };
+
+    const handleDeleteNews = async (newsId: string) => {
+        dispatch(deleteNews(newsId));
+        setTimeout(() => {
+            dispatch(fetchNews());
+        }, 100);
+    };
+
+    const handleDeleteClick = (newsId: string) => {
+        setNewsIdToDelete(newsId);
+    };
+
+    const closeModal = () => {
+        setNewsIdToDelete(null);
     };
 
     return (
@@ -174,9 +191,15 @@ const HomeBody = () => {
                             <div>
                                 <button
                                     className="border-0 hover-bright20 rounded-2 mb-2 py-1 w-100 text-light color6 bg-color6"
-                                    onClick={() => handleEditNews(news)} // Pass the news to edit
+                                    onClick={() => handleEditNews(news)}
                                 >
-                                    Update
+                                    Edit
+                                </button>
+                                <button
+                                    className="border-0 hover-bright20 rounded-2 mb-2 py-1 w-100 text-light color6 bg-danger"
+                                    onClick={() => handleDeleteClick(news.id!)}
+                                >
+                                    Delete
                                 </button>
                             </div>
                         </li>
@@ -212,6 +235,21 @@ const HomeBody = () => {
                     subcategories={subcategories}
                 />
             )}
+
+            {/* Modal for confirmation */}
+            <ConfirmationModal
+                show={newsIdToDelete !== null}
+                title="Delete News"
+                onHide={closeModal}
+                onConfirm={async () => {
+                    if (newsIdToDelete) {
+                        await handleDeleteNews(newsIdToDelete); 
+                        closeModal(); 
+                    }
+                }}
+                loading={newsLoading}
+            />
+
         </div>
     );
 };

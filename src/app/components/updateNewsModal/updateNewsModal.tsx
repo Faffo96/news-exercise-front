@@ -275,7 +275,7 @@ const UpdateNewsModal: React.FC<UpdateNewsModalProps> = ({
              {/* Modale di conferma */}
              <ConfirmationModal
                 show={newsIdToUpdate !== null}
-                title="Update news"
+                title="Edit news"
                 onHide={closeModal}
                 onConfirm={handleConfirm}
                 loading={loading}
