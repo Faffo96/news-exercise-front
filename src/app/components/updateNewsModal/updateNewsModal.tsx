@@ -123,7 +123,8 @@ const UpdateNewsModal: React.FC<UpdateNewsModalProps> = ({
             onClose();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            showToast("error", "Error updating news:" + error.response.data)
+            const errorMessage = error.response?.data?.message || "Error updating news.";
+            showToast("error", errorMessage)
             console.error("Error updating news:", error);
             setErrors((prevErrors) => ({
                 ...prevErrors,

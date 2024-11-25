@@ -161,7 +161,8 @@ const CreateNewsModal: React.FC<CreateNewsModalProps> = ({
             onClose();
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            showToast("error", "Error creating news:" + error.response.data.message)
+            const errorMessage = error.response?.data?.message || "Error creating news.";
+            showToast("error", errorMessage)
             console.error("Error creating news:", error);
             setErrors((prevErrors) => ({
                 ...prevErrors,
